@@ -1,0 +1,24 @@
+# Ignore vendor directories and dependencies
+/vendor/
+~/.composer/
+composer.phar
+
+# Ignore WordPress coding standards submodule
+.composer/
+.phpcs/
+wpcs/
+
+# Ignore development/system files
+.DS_Store
+Thumbs.db
+*.log
+.idea/
+.vscode/
+node_modules/
+
+# Ignore environment specific files
+.env
+.env.*
+
+# Ignore backup directories
+*Backup/
