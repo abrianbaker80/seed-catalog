@@ -356,17 +356,8 @@ class Seed_Catalog_Shortcodes {
         // Buffer output
         ob_start();
         
-        // Set up template paths with proper directory structure
-        $template_dir = SEED_CATALOG_PLUGIN_DIR . 'templates/shortcodes/';
-        
-        // Ensure the directory exists and is readable
-        if (!is_dir($template_dir)) {
-            wp_mkdir_p($template_dir);
-        }
-
-        // Get full path to template files
-        $main_template = $template_dir . 'submission-form.php';
-        $fallback_template = $template_dir . 'submission-form-fallback.php';
+        // Load the template file if it exists
+        $template_file = SEED_CATALOG_PLUGIN_DIR . 'templates/shortcodes/submission-form.php';
         
         // Pass variables to template
         $template_vars = array(
@@ -375,39 +366,16 @@ class Seed_Catalog_Shortcodes {
             'error_message' => $error_message,
         );
         
-        // First try the main template
-        if (file_exists($main_template) && is_readable($main_template)) {
+        if (file_exists($template_file)) {
+            // Extract variables to make them available to the template
             extract($template_vars); // phpcs:ignore WordPress.PHP.DontExtract.extract_extract
-            include $main_template;
-        } 
-        // Then try the fallback
-        else if (file_exists($fallback_template) && is_readable($fallback_template)) {
-            extract($template_vars); // phpcs:ignore WordPress.PHP.DontExtract.extract_extract
-            include $fallback_template;
-        }
-        // If neither exists, display basic form
-        else {
-            ?>
-            <div class="seed-catalog-submission-form-container">
-                <h2><?php echo esc_html($atts['title']); ?></h2>
-                <form method="post" class="seed-catalog-submission-form">
-                    <?php wp_nonce_field('seed_submission_form', 'seed_submission_nonce'); ?>
-                    <div class="seed-catalog-form-field">
-                        <label for="seed_title"><?php esc_html_e('Seed Title *', 'seed-catalog'); ?></label>
-                        <input type="text" id="seed_title" name="seed_title" required aria-required="true">
-                    </div>
-                    <div class="seed-catalog-form-field">
-                        <label for="seed_description"><?php esc_html_e('Description', 'seed-catalog'); ?></label>
-                        <textarea id="seed_description" name="seed_description" rows="5"></textarea>
-                    </div>
-                    <div class="seed-catalog-form-submit">
-                        <button type="submit" class="button button-primary"><?php echo esc_html($atts['submit_text']); ?></button>
-                    </div>
-                </form>
-            </div>
-            <?php
+            include $template_file;
+        } else {
+            // Use the standard submission form as fallback
+            include SEED_CATALOG_PLUGIN_DIR . 'templates/shortcodes/submission-form-fallback.php';
         }
         
+        // Return the buffer
         return ob_get_clean();
     }
     
