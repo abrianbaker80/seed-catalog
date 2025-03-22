@@ -46,20 +46,40 @@ class Seed_Catalog_Minify {
     }
 
     /**
-     * Minify JavaScript content
+     * Check if JSMin is available
+     *
+     * @return bool True if JSMin is available
+     */
+    private static function has_jsmin() {
+        return file_exists(SEED_CATALOG_PLUGIN_DIR . 'vendor/linkorb/jsmin-php/src/jsmin-1.1.1.php');
+    }
+
+    /**
+     * Minify JS content. Falls back to basic minification if JSMin isn't available
      *
      * @param string $js The JavaScript content to minify
      * @return string The minified JavaScript
      */
     public static function js($js) {
-        if (!class_exists('JSMin\JSMin')) {
-            require_once SEED_CATALOG_PLUGIN_DIR . 'vendor/jsmin/jsmin.php';
+        // Basic minification if JSMin isn't available
+        if (!self::has_jsmin()) {
+            // Remove comments and extra whitespace
+            $js = preg_replace('!/\*[^*]*\*+([^/][^*]*\*+)*/!', '', $js);
+            $js = preg_replace('/\s+/', ' ', $js);
+            $js = preg_replace('/\s*([\{\}\[\]\(\)=><;,:])\s*/', '$1', $js);
+            return $js;
         }
-        
+
+        // Use JSMin if available
+        require_once SEED_CATALOG_PLUGIN_DIR . 'vendor/linkorb/jsmin-php/src/jsmin-1.1.1.php';
         try {
-            return JSMin::minify($js);
+            return \JSMin::minify($js);
         } catch (Exception $e) {
-            // If minification fails, return the original content
+            // Log error if debug is enabled
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+                error_log('Seed Catalog JSMin Error: ' . $e->getMessage());
+            }
+            // Return original content on error
             return $js;
         }
     }
@@ -109,9 +129,34 @@ class Seed_Catalog_Minify {
         $pathinfo = pathinfo($file);
         $min_file = $pathinfo['dirname'] . '/' . $pathinfo['filename'] . '.min.' . $pathinfo['extension'];
         
-        // If minified version doesn't exist or is older than source
+        // If minified version doesn't exist or is older than source or SCRIPT_DEBUG is enabled
+        if (defined('SCRIPT_DEBUG') && SCRIPT_DEBUG) {
+            return $url; // Use unminified version in debug mode
+        }
+
         if (!file_exists($min_file) || filemtime($min_file) < filemtime($file)) {
-            self::create_minified_file($file, $pathinfo['extension']);
+            // Create minified version
+            try {
+                $content = file_get_contents($file);
+                if ($content === false) {
+                    return $url; // Return original if can't read
+                }
+
+                // Minify based on file type
+                $minified = $pathinfo['extension'] === 'css' ? 
+                    self::css($content) : 
+                    self::js($content);
+                
+                if (file_put_contents($min_file, $minified) === false) {
+                    return $url; // Return original if can't write
+                }
+            } catch (Exception $e) {
+                // Log error if debug is enabled
+                if (defined('WP_DEBUG') && WP_DEBUG) {
+                    error_log('Seed Catalog Minify Error: ' . $e->getMessage());
+                }
+                return $url; // Return original URL on error
+            }
         }
         
         return str_replace(

@@ -36,6 +36,19 @@ define('SEED_CATALOG_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('SEED_CATALOG_PLUGIN_URL', plugins_url('/', __FILE__));
 
 /**
+ * Load plugin textdomain.
+ * This must be done on init hook according to WordPress best practices.
+ */
+function seed_catalog_load_textdomain() {
+    load_plugin_textdomain(
+        'seed-catalog',
+        false,
+        dirname(plugin_basename(__FILE__)) . '/languages'
+    );
+}
+add_action('init', 'seed_catalog_load_textdomain');
+
+/**
  * The code that runs during plugin activation.
  */
 function seed_catalog_activate() {

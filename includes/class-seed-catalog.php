@@ -136,12 +136,18 @@ class Seed_Catalog {
             $meta_boxes = new Seed_Catalog_Meta_Boxes();
             $gemini_api = new Seed_Catalog_Gemini_API();
             $exporter = new Seed_Catalog_Exporter();
-            
-            // Make sure the diagnostic class is loaded
-            if (!class_exists('SeedCatalog\\Seed_Catalog_Diagnostic') && is_admin()) {
-                require_once SEED_CATALOG_PLUGIN_DIR . 'includes/class-seed-catalog-diagnostic.php';
+
+            // Initialize diagnostic tools if in admin and debug is enabled
+            $diagnostic = null;
+            if (is_admin() && get_option('seed_catalog_enable_debug', false)) {
+                $diagnostic_file = SEED_CATALOG_PLUGIN_DIR . 'includes/class-seed-catalog-diagnostic.php';
+                if (file_exists($diagnostic_file)) {
+                    require_once $diagnostic_file;
+                    if (class_exists('SeedCatalog\\Seed_Catalog_Diagnostic')) {
+                        $diagnostic = new Seed_Catalog_Diagnostic();
+                    }
+                }
             }
-            $diagnostic = new Seed_Catalog_Diagnostic();
 
             // Admin assets and core functionality
             $this->loader->add_action('admin_enqueue_scripts', $plugin_admin, 'enqueue_styles');
@@ -168,8 +174,8 @@ class Seed_Catalog {
             $this->loader->add_action('admin_menu', $plugin_admin, 'add_plugin_settings_page');
             $this->loader->add_action('admin_init', $plugin_admin, 'register_settings');
             
-            // Register diagnostic tools if debug is enabled
-            if (get_option('seed_catalog_enable_debug', false)) {
+            // Register diagnostic tools if available
+            if ($diagnostic !== null && get_option('seed_catalog_enable_debug', false)) {
                 $this->loader->add_action('admin_footer', $plugin_admin, 'add_debug_panel');
                 $this->loader->add_action('admin_notices', $diagnostic, 'display_diagnostic_notices');
             }
