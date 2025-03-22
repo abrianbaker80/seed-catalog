@@ -29,7 +29,7 @@ class Seed_Catalog_API_Test_Util {
      *
      * @since    1.0.0
      * @access   protected
-     * @var      \Seed_Catalog_Gemini_API    $api    The Gemini API instance.
+     * @var      Seed_Catalog_Gemini_API    $api    The Gemini API instance.
      */
     protected $api;
 
@@ -97,7 +97,7 @@ class Seed_Catalog_API_Test_Util {
             
             $error_message = isset($error_messages[$error_type]) ? $error_messages[$error_type] : $error_messages['api_unknown_error'];
             
-            if (isset($response['message']) && WP_DEBUG) {
+            if (isset($response['message']) && defined('WP_DEBUG') && WP_DEBUG) {
                 $error_message .= ' ' . sprintf(__('(Debug: %s)', 'seed-catalog'), $response['message']);
             }
             
@@ -110,7 +110,7 @@ class Seed_Catalog_API_Test_Util {
                 $e->getMessage()
             );
             
-            if (WP_DEBUG) {
+            if (defined('WP_DEBUG') && WP_DEBUG) {
                 $error_message .= ' ' . sprintf(__('(Debug: %s)', 'seed-catalog'), $e->getTraceAsString());
             }
             
@@ -160,9 +160,9 @@ class Seed_Catalog_API_Test_Util {
             
             wp_send_json_success($this->clean_api_response($result));
             
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             wp_send_json_error(array(
-                'message' => $this->format_error_message($e->getMessage(), WP_DEBUG ? $e->getTraceAsString() : null),
+                'message' => $this->format_error_message($e->getMessage(), (defined('WP_DEBUG') && WP_DEBUG) ? $e->getTraceAsString() : null),
                 'error_type' => 'exception'
             ));
         }
@@ -283,7 +283,7 @@ class Seed_Catalog_API_Test_Util {
      * @return    string                 Formatted error message
      */
     private function format_error_message($message, $debug_data = null) {
-        if (!WP_DEBUG || empty($debug_data)) {
+        if (!defined('WP_DEBUG') || !WP_DEBUG || empty($debug_data)) {
             return $message;
         }
 

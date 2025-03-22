@@ -58,9 +58,9 @@ class Seed_Catalog_Upgrader {
             // Log the upgrade
             self::log_upgrade($previous_version, $current_version);
             
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             // Log details and rethrow
-            if (defined('WP_DEBUG') && WP_DEBUG) {
+            if (defined('WP_DEBUG') && WP_DEBUG === true) {
                 error_log(sprintf(
                     'Seed Catalog upgrade error from %s to %s: %s', 
                     $previous_version, 

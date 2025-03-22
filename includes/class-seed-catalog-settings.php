@@ -353,14 +353,15 @@ class Seed_Catalog_Settings {
     /**
      * Get the OAuth client configuration
      * 
-     * @return array The client configuration
+     * @return array The client configuration (empty array if not configured)
      */
     public static function get_oauth_config() {
         $client_id = get_option(self::OPTION_OAUTH_CLIENT_ID, '');
         $client_secret = get_option(self::OPTION_OAUTH_CLIENT_SECRET, '');
         
         if (empty($client_id) || empty($client_secret)) {
-            return null;
+            // Return an empty array instead of null to match the declared return type
+            return array();
         }
         
         return array(

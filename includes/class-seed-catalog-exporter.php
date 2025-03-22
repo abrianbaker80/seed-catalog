@@ -88,6 +88,11 @@ class Seed_Catalog_Exporter {
         
         // Write data rows
         foreach ($seeds as $seed) {
+            // Skip if $seed is not an object
+            if (!is_object($seed)) {
+                continue;
+            }
+            
             $seed_categories = \get_the_terms($seed->ID, 'seed_category');
             $categories = '';
             

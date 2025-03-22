@@ -193,7 +193,7 @@ class Seed_Catalog_Shortcodes {
             );
         }
 
-        $seeds_query = new \WP_Query($args);
+        $seeds_query = new WP_Query($args);
         
         // Buffer output
         ob_start();
