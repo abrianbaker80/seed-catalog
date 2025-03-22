@@ -3,9 +3,9 @@
  * Plugin Name: Seed Catalog
  * Plugin URI: https://github.com/abrianbaker80/seed-catalog
  * Description: A comprehensive seed catalog management system with AI-powered plant information retrieval.
- * Version: 1.0.7
+ * Version: 1.0.8
  * Author: Allen Baker
- * Author URI: https://yourwebsite.com
+ * Author URI: https://test.thereclaimedhanger.com
  * License: GPL-2.0+
  * License URI: http://www.gnu.org/licenses/gpl-2.0.txt
  * Text Domain: seed-catalog
@@ -25,7 +25,7 @@ if (!defined('WPINC')) {
  * Current plugin version.
  * Start at version 1.0.0 and use SemVer - https://semver.org
  */
-define('SEED_CATALOG_VERSION', '1.0.7');
+define('SEED_CATALOG_VERSION', '1.0.8');
 
 /**
  * Define plugin constants.
