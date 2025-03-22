@@ -173,6 +173,11 @@ class Seed_Catalog_GitHub_Updater {
     private $github_response;
 
     public function __construct($plugin_file) {
+        // Include the required plugin.php file for get_plugin_data()
+        if (!function_exists('get_plugin_data')) {
+            require_once(ABSPATH . 'wp-admin/includes/plugin.php');
+        }
+        
         $this->plugin_file = $plugin_file;
         add_filter('pre_set_site_transient_update_plugins', array($this, 'check_update'));
         add_filter('plugins_api', array($this, 'plugin_popup'), 10, 3);
@@ -182,12 +187,18 @@ class Seed_Catalog_GitHub_Updater {
         $this->plugin_data = get_plugin_data($plugin_file);
         
         // Set from GitHub Plugin URI in the plugin header
-        list($this->username, $this->repo) = explode('/', trim(str_replace('https://github.com/', '', $this->plugin_data['GitHub Plugin URI'])));
+        if (isset($this->plugin_data['GitHub Plugin URI'])) {
+            $uri_parts = explode('/', trim(str_replace('https://github.com/', '', $this->plugin_data['GitHub Plugin URI'])));
+            if (count($uri_parts) >= 2) {
+                $this->username = $uri_parts[0];
+                $this->repo = $uri_parts[1];
+            }
+        }
     }
 
     // Check for updates against the GitHub repository
     public function check_update($transient) {
-        if (empty($transient->checked)) {
+        if (empty($transient->checked) || empty($this->username) || empty($this->repo)) {
             return $transient;
         }
 

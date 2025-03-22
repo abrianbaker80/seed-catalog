@@ -135,6 +135,11 @@ class Seed_Catalog {
             $meta_boxes = new Seed_Catalog_Meta_Boxes();
             $gemini_api = new Seed_Catalog_Gemini_API();
             $exporter = new Seed_Catalog_Exporter();
+            
+            // Make sure the diagnostic class is loaded
+            if (!class_exists('SeedCatalog\\Seed_Catalog_Diagnostic') && is_admin()) {
+                require_once SEED_CATALOG_PLUGIN_DIR . 'includes/class-seed-catalog-diagnostic.php';
+            }
             $diagnostic = new Seed_Catalog_Diagnostic();
 
             // Admin assets and core functionality
