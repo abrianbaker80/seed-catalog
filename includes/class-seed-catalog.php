@@ -85,6 +85,7 @@ class Seed_Catalog {
             require_once SEED_CATALOG_PLUGIN_DIR . 'includes/class-seed-catalog-meta-boxes.php';
             require_once SEED_CATALOG_PLUGIN_DIR . 'includes/class-seed-catalog-shortcodes.php';
             require_once SEED_CATALOG_PLUGIN_DIR . 'includes/class-seed-catalog-templates.php';
+            require_once SEED_CATALOG_PLUGIN_DIR . 'includes/class-seed-catalog-minify.php';
             
             // Admin classes
             require_once SEED_CATALOG_PLUGIN_DIR . 'admin/class-seed-catalog-admin.php';
