@@ -465,4 +465,41 @@ class Seed_Catalog_Meta_Boxes {
             }
         }
     }
+
+    /**
+     * Save the meta box data when a seed post is saved.
+     *
+     * @since    1.0.0
+     * @param    int       $post_id    The ID of the post being saved.
+     * @param    \WP_Post  $post       The post object.
+     */
+    public function save_seed_meta($post_id, $post) {
+        // Check if our nonce is set
+        if (!isset($_POST['seed_catalog_meta_nonce'])) {
+            return;
+        }
+
+        // Verify that the nonce is valid
+        if (!wp_verify_nonce($_POST['seed_catalog_meta_nonce'], 'seed_catalog_save_meta_data')) {
+            return;
+        }
+
+        // If this is an autosave, our form has not been submitted, so we don't want to do anything
+        if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) {
+            return;
+        }
+
+        // Check the user's permissions
+        if (!current_user_can('edit_post', $post_id)) {
+            return;
+        }
+
+        // Ensure it's the correct post type
+        if ('seed' !== $post->post_type) {
+            return;
+        }
+
+        // Call the existing method to handle saving the meta data
+        $this->save_seed_meta_data($post_id);
+    }
 }

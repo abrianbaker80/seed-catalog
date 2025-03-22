@@ -165,4 +165,19 @@ class Seed_Catalog_Exporter {
         </div>
         <?php
     }
+
+    /**
+     * Handle export request from admin page
+     *
+     * @since    1.0.0
+     */
+    public function handle_export() {
+        // Check if this is the correct action
+        if (!isset($_GET['action']) || $_GET['action'] !== 'seed_catalog_export') {
+            return;
+        }
+        
+        // Call the export function
+        $this->export_seeds_to_excel();
+    }
 }
