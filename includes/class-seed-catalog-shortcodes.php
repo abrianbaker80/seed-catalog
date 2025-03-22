@@ -371,8 +371,123 @@ class Seed_Catalog_Shortcodes {
             extract($template_vars); // phpcs:ignore WordPress.PHP.DontExtract.extract_extract
             include $template_file;
         } else {
-            // Use the standard submission form as fallback
-            include SEED_CATALOG_PLUGIN_DIR . 'templates/shortcodes/submission-form-fallback.php';
+            // Inline fallback form
+            ?>
+            <div class="seed-catalog-submission-form">
+                <?php if (!empty($success_message)): ?>
+                    <div class="seed-catalog-message success" role="alert">
+                        <?php echo esc_html($success_message); ?>
+                    </div>
+                <?php endif; ?>
+
+                <?php if (!empty($error_message)): ?>
+                    <div class="seed-catalog-message error" role="alert">
+                        <?php echo esc_html($error_message); ?>
+                    </div>
+                <?php endif; ?>
+
+                <form method="post" class="seed-catalog-form" id="seed-submission-form">
+                    <?php wp_nonce_field('seed_submission_form', 'seed_submission_nonce'); ?>
+                    
+                    <div class="seed-catalog-form-field">
+                        <label for="seed_title"><?php esc_html_e('Seed Title', 'seed-catalog'); ?> <span class="required">*</span></label>
+                        <input type="text" id="seed_title" name="seed_title" required>
+                    </div>
+
+                    <div class="seed-catalog-form-field">
+                        <label for="seed_name"><?php esc_html_e('Seed Name', 'seed-catalog'); ?></label>
+                        <input type="text" id="seed_name" name="seed_name">
+                        <button type="button" class="button seed-catalog-ai-suggest">
+                            <?php esc_html_e('Find with AI', 'seed-catalog'); ?>
+                        </button>
+                    </div>
+
+                    <div class="seed-catalog-variety-list" style="display:none;"></div>
+
+                    <div class="seed-catalog-form-field">
+                        <label for="seed_variety"><?php esc_html_e('Variety', 'seed-catalog'); ?></label>
+                        <input type="text" id="seed_variety" name="seed_variety">
+                    </div>
+
+                    <div id="seed-details-section" style="display:none;">
+                        <div class="seed-catalog-form-field">
+                            <label for="days_to_maturity"><?php esc_html_e('Days to Maturity', 'seed-catalog'); ?></label>
+                            <input type="number" id="days_to_maturity" name="days_to_maturity" min="0">
+                        </div>
+
+                        <div class="seed-catalog-form-field">
+                            <label for="planting_depth"><?php esc_html_e('Planting Depth', 'seed-catalog'); ?></label>
+                            <input type="text" id="planting_depth" name="planting_depth">
+                        </div>
+
+                        <div class="seed-catalog-form-field">
+                            <label for="planting_spacing"><?php esc_html_e('Planting Spacing', 'seed-catalog'); ?></label>
+                            <input type="text" id="planting_spacing" name="planting_spacing">
+                        </div>
+
+                        <div class="seed-catalog-form-field">
+                            <label for="sunlight_needs"><?php esc_html_e('Sunlight Needs', 'seed-catalog'); ?></label>
+                            <select id="sunlight_needs" name="sunlight_needs">
+                                <option value=""><?php esc_html_e('Select...', 'seed-catalog'); ?></option>
+                                <option value="Full Sun"><?php esc_html_e('Full Sun', 'seed-catalog'); ?></option>
+                                <option value="Partial Sun"><?php esc_html_e('Partial Sun', 'seed-catalog'); ?></option>
+                                <option value="Partial Shade"><?php esc_html_e('Partial Shade', 'seed-catalog'); ?></option>
+                                <option value="Full Shade"><?php esc_html_e('Full Shade', 'seed-catalog'); ?></option>
+                            </select>
+                        </div>
+
+                        <div class="seed-catalog-form-field">
+                            <label for="watering_requirements"><?php esc_html_e('Watering Requirements', 'seed-catalog'); ?></label>
+                            <textarea id="watering_requirements" name="watering_requirements" rows="3"></textarea>
+                        </div>
+
+                        <div class="seed-catalog-form-field">
+                            <label for="harvesting_tips"><?php esc_html_e('Harvesting Tips', 'seed-catalog'); ?></label>
+                            <textarea id="harvesting_tips" name="harvesting_tips" rows="3"></textarea>
+                        </div>
+
+                        <div class="seed-catalog-form-field">
+                            <label for="companion_plants"><?php esc_html_e('Companion Plants', 'seed-catalog'); ?></label>
+                            <textarea id="companion_plants" name="companion_plants" rows="3"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="seed-catalog-form-field">
+                        <label for="seed_description"><?php esc_html_e('Description', 'seed-catalog'); ?></label>
+                        <textarea id="seed_description" name="seed_description" rows="5"></textarea>
+                    </div>
+
+                    <?php 
+                    // Get seed categories
+                    $categories = get_terms(array(
+                        'taxonomy' => 'seed_category',
+                        'hide_empty' => false,
+                    ));
+                    
+                    if (!empty($categories) && !is_wp_error($categories)): ?>
+                        <div class="seed-catalog-form-field">
+                            <label><?php esc_html_e('Categories', 'seed-catalog'); ?></label>
+                            <div class="seed-catalog-checkbox-group">
+                                <?php foreach ($categories as $category): ?>
+                                    <label class="checkbox-label">
+                                        <input type="checkbox" 
+                                               name="seed_categories[]" 
+                                               value="<?php echo esc_attr($category->term_id); ?>">
+                                        <?php echo esc_html($category->name); ?>
+                                    </label>
+                                <?php endforeach; ?>
+                            </div>
+                        </div>
+                    <?php endif; ?>
+
+                    <div class="seed-catalog-form-submit">
+                        <button type="submit" class="button button-primary">
+                            <?php echo esc_html($atts['submit_text']); ?>
+                        </button>
+                    </div>
+                </form>
+            </div>
+            <?php
         }
         
         // Return the buffer
