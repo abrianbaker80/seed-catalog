@@ -332,20 +332,20 @@ class Seed_Catalog_Public {
         }
         
         // Use the Gemini API class to perform the search
-        if (class_exists('Seed_Catalog_Gemini_API')) {
-            $gemini_api = new Seed_Catalog_Gemini_API();
-            
-            // Make sure the API key is set
-            if (!$gemini_api->is_configured()) {
-                wp_send_json_error(array('message' => 'Gemini API key not configured.'));
-                return;
-            }
-            
-            // Let the Gemini API class handle the variety search
-            $gemini_api->search_seed_varieties();
-        } else {
-            wp_send_json_error(array('message' => 'Gemini API class not found.'));
+        if (!class_exists('SeedCatalog\\Seed_Catalog_Gemini_API')) {
+            require_once SEED_CATALOG_PLUGIN_DIR . 'includes/class-seed-catalog-gemini-api.php';
         }
+        
+        $gemini_api = new Seed_Catalog_Gemini_API();
+        
+        // Make sure the API key is set
+        if (!$gemini_api->is_configured()) {
+            wp_send_json_error(array('message' => 'Gemini API key not configured. Please configure it in the plugin settings.'));
+            return;
+        }
+        
+        // Call the search method - it will handle the wp_send_json_* responses internally
+        $gemini_api->search_seed_varieties($search_term);
         
         wp_die();
     }
