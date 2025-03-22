@@ -45,6 +45,15 @@ class Seed_Catalog {
     protected $version;
 
     /**
+     * Tracks if dependencies have been loaded
+     *
+     * @since    1.1.0
+     * @access   private
+     * @var      boolean    $dependencies_loaded    Whether dependencies have been loaded
+     */
+    private $dependencies_loaded = false;
+
+    /**
      * Define the core functionality of the plugin.
      *
      * Set the plugin version and initialize the loader which will be used to
@@ -54,9 +63,29 @@ class Seed_Catalog {
      */
     public function __construct() {
         $this->version = SEED_CATALOG_VERSION;
+        
+        // Initialize loader first
+        require_once SEED_CATALOG_PLUGIN_DIR . 'includes/class-seed-catalog-loader.php';
+        $this->loader = new Seed_Catalog_Loader();
+        
+        // Schedule dependency loading for init
+        add_action('init', array($this, 'init_plugin'), 0);
+    }
+
+    /**
+     * Initialize plugin after WordPress is loaded
+     *
+     * @since    1.1.0
+     */
+    public function init_plugin() {
+        if ($this->dependencies_loaded) {
+            return;
+        }
+
         $this->load_dependencies();
         $this->define_admin_hooks();
         $this->define_public_hooks();
+        $this->dependencies_loaded = true;
     }
 
     /**
@@ -78,48 +107,25 @@ class Seed_Catalog {
      * @access   private
      */
     private function load_dependencies() {
-        try {
-            // Wait for init hook before loading dependencies that use translations
-            if (!did_action('init')) {
-                add_action('init', array($this, 'load_dependencies'), 5);
-                return;
-            }
-            
-            // Essential classes
-            require_once SEED_CATALOG_PLUGIN_DIR . 'includes/class-seed-catalog-loader.php';
-            require_once SEED_CATALOG_PLUGIN_DIR . 'includes/class-seed-catalog-post-types.php';
-            require_once SEED_CATALOG_PLUGIN_DIR . 'includes/class-seed-catalog-meta-boxes.php';
-            require_once SEED_CATALOG_PLUGIN_DIR . 'includes/class-seed-catalog-shortcodes.php';
-            require_once SEED_CATALOG_PLUGIN_DIR . 'includes/class-seed-catalog-templates.php';
-            require_once SEED_CATALOG_PLUGIN_DIR . 'includes/class-seed-catalog-minify.php';
-            
-            // Admin classes
-            require_once SEED_CATALOG_PLUGIN_DIR . 'admin/class-seed-catalog-admin.php';
-            
-            // Public classes
-            require_once SEED_CATALOG_PLUGIN_DIR . 'public/class-seed-catalog-public.php';
-            
-            // Feature classes
-            require_once SEED_CATALOG_PLUGIN_DIR . 'includes/class-seed-catalog-exporter.php';
-            require_once SEED_CATALOG_PLUGIN_DIR . 'includes/class-seed-catalog-gemini-api.php';
-            
-            // Diagnostic and testing tools
-            if (is_admin()) {
-                require_once SEED_CATALOG_PLUGIN_DIR . 'includes/class-seed-catalog-diagnostic.php';
-                require_once SEED_CATALOG_PLUGIN_DIR . 'includes/class-seed-catalog-api-test-util.php';
-            }
-
-            $this->loader = new Seed_Catalog_Loader();
-            
-        } catch (Exception $e) {
-            // Log error and notify if in debug mode
-            $this->log_error('Error loading dependencies: ' . $e->getMessage());
-            
-            if (defined('WP_DEBUG') && WP_DEBUG) {
-                add_action('admin_notices', function() use ($e) {
-                    echo '<div class="error"><p><strong>Seed Catalog:</strong> Error loading plugin dependencies. ' . esc_html($e->getMessage()) . '</p></div>';
-                });
-            }
+        // Essential classes
+        require_once SEED_CATALOG_PLUGIN_DIR . 'includes/class-seed-catalog-post-types.php';
+        require_once SEED_CATALOG_PLUGIN_DIR . 'includes/class-seed-catalog-meta-boxes.php';
+        require_once SEED_CATALOG_PLUGIN_DIR . 'includes/class-seed-catalog-shortcodes.php';
+        require_once SEED_CATALOG_PLUGIN_DIR . 'includes/class-seed-catalog-templates.php';
+        require_once SEED_CATALOG_PLUGIN_DIR . 'includes/class-seed-catalog-minify.php';
+        
+        // Admin and public classes
+        require_once SEED_CATALOG_PLUGIN_DIR . 'admin/class-seed-catalog-admin.php';
+        require_once SEED_CATALOG_PLUGIN_DIR . 'public/class-seed-catalog-public.php';
+        
+        // Feature classes
+        require_once SEED_CATALOG_PLUGIN_DIR . 'includes/class-seed-catalog-exporter.php';
+        require_once SEED_CATALOG_PLUGIN_DIR . 'includes/class-seed-catalog-gemini-api.php';
+        
+        // Diagnostic and testing tools
+        if (is_admin()) {
+            require_once SEED_CATALOG_PLUGIN_DIR . 'includes/class-seed-catalog-diagnostic.php';
+            require_once SEED_CATALOG_PLUGIN_DIR . 'includes/class-seed-catalog-api-test-util.php';
         }
     }
 
@@ -261,9 +267,10 @@ class Seed_Catalog {
      */
     public function run() {
         if (isset($this->loader)) {
-            $this->loader->run();
+            return $this->loader->run();
         } else {
             $this->log_error('Plugin loader not initialized properly.');
+            return false;
         }
     }
     
