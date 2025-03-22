@@ -40,6 +40,20 @@ class Seed_Catalog_Shortcodes {
     }
 
     /**
+     * Register all shortcodes
+     *
+     * @since    1.0.0
+     */
+    public function register_shortcodes() {
+        // These shortcodes are already registered in the constructor,
+        // but we're creating this method to match the expected hook callback
+        add_shortcode('seed_search', array($this, 'render_search_shortcode'));
+        add_shortcode('seed_categories', array($this, 'render_categories_shortcode'));
+        add_shortcode('seed_list', array($this, 'render_seed_list_shortcode'));
+        add_shortcode('seed_submission_form', array($this, 'seed_submission_form_shortcode'));
+    }
+
+    /**
      * Render the search form shortcode with accessibility improvements
      *
      * @param array $atts Shortcode attributes
