@@ -25,7 +25,7 @@ if (!defined('WPINC')) {
  * Current plugin version.
  * Start at version 1.0.0 and use SemVer - https://semver.org
  */
-define('SEED_CATALOG_VERSION', '1.0.4');
+define('SEED_CATALOG_VERSION', '1.0.5');
 
 /**
  * Define plugin constants.
