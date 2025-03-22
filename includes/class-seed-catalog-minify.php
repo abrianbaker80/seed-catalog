@@ -73,7 +73,7 @@ class Seed_Catalog_Minify {
         // Use JSMin if available
         require_once SEED_CATALOG_PLUGIN_DIR . 'vendor/linkorb/jsmin-php/src/jsmin-1.1.1.php';
         try {
-            return \JSMin::minify($js);
+            return JSMin::minify($js);
         } catch (Exception $e) {
             // Log error if debug is enabled
             if (defined('WP_DEBUG') && WP_DEBUG) {
