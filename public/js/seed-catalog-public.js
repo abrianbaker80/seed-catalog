@@ -439,33 +439,18 @@
                     } else {
                         let errorMessage = "No varieties found for this seed. Please try a different search term or enter details manually.";
                         
-                        // Check for specific error messages
+                        // Check for specific error messages from the server
                         if (response.data && response.data.message) {
                             errorMessage = response.data.message;
                             debug("Error message from server:", errorMessage);
                         }
                         
-                        // If the API key is missing, give more specific instructions
-                        if (errorMessage.includes('API key') || errorMessage.includes('Missing API key')) {
-                            errorMessage = "Missing API key. Please go to Seed Catalog Settings to add your Gemini API key.";
-                        }
-                        
-                        // If response has raw response for debugging
-                        if (response.data && response.data._debug) {
-                            debug("Debug info in response:", response.data._debug);
-                            if (response.data._debug.fallback_used) {
-                                debug("Using fallback data due to parsing error:", response.data._debug.parsing_error);
-                            }
-                        }
-                        
                         // If we got varieties from a fallback but still have an error message
                         if (response.data && response.data.varieties && response.data.varieties.length > 0) {
-                            // Use the varieties anyway, but log debug info
-                            debug("Using fallback varieties despite error message");
+                            // Use the varieties anyway, but show a warning
                             displayVarieties(response.data.varieties, term);
                             showMessage("Using limited variety information. Some details may be missing.", "warning");
                         } else {
-                            // Show the error
                             showError(errorMessage);
                         }
                     }
@@ -479,7 +464,9 @@
                     if (xhr.responseJSON && xhr.responseJSON.data && xhr.responseJSON.data.message) {
                         errorMessage = xhr.responseJSON.data.message;
                     } else if (xhr.status === 403) {
-                        errorMessage = "Permission denied. Please check your API key in plugin settings.";
+                        errorMessage = "Permission denied. Please check if your Gemini API key is configured correctly in the plugin settings.";
+                    } else if (xhr.status === 404) {
+                        errorMessage = "API endpoint not found. Please check your WordPress permalinks and try resaving them.";
                     } else if (xhr.status === 0) {
                         errorMessage = "Network error. Please check your internet connection.";
                     }
