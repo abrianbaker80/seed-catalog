@@ -924,38 +924,33 @@ EOT;
             return new WP_Error('not_ajax', __('This method should be called via AJAX', 'seed-catalog'));
         }
 
-        // Verify nonce
-        check_ajax_referer('seed_catalog_gemini_nonce', 'nonce');
-
-        // Check if user has permission
-        if (!current_user_can('edit_posts')) {
-            wp_send_json_error(array('message' => __('You do not have permission to search seed varieties.', 'seed-catalog')));
-            return new WP_Error('permission_denied', __('Permission denied', 'seed-catalog'));
+        // Get search term from POST if not provided
+        if (empty($search_term) && isset($_POST['term'])) {
+            $search_term = sanitize_text_field($_POST['term']);
         }
-
-        // Get search term from parameter or POST
-        $search_term = $search_term ?? (isset($_POST['term']) ? sanitize_text_field($_POST['term']) : '');
 
         if (empty($search_term)) {
             wp_send_json_error(array('message' => __('No search term provided.', 'seed-catalog')));
-            return new WP_Error('empty_search', __('No search term provided', 'seed-catalog'));
+            return;
         }
 
-        $api_key = $this->get_api_key();
-        if (empty($api_key)) {
-            wp_send_json_error(array('message' => __('Missing API key. Please add your Gemini API key in the plugin settings.', 'seed-catalog')));
-            return new WP_Error('missing_api_key', __('Missing API key', 'seed-catalog'));
+        // Check if API is configured
+        if (!$this->is_configured()) {
+            wp_send_json_error(array('message' => __('Gemini API key not configured.', 'seed-catalog')));
+            return;
         }
 
+        // Format prompt for variety search
         $prompt = sprintf(
             'Search for seed varieties matching: %s. Format the response as JSON with varieties array containing name and description for each variety.',
-            sanitize_text_field($search_term)
+            $search_term
         );
 
         $api_response = $this->make_request($prompt);
         
         if (is_wp_error($api_response)) {
-            return $api_response;
+            wp_send_json_error(array('message' => $api_response->get_error_message()));
+            return;
         }
 
         try {
@@ -964,22 +959,19 @@ EOT;
             
             if (!$parsed_data) {
                 $fallback_data = $this->get_fallback_varieties($search_term);
-                if (wp_doing_ajax()) {
-                    wp_send_json_success($fallback_data);
-                }
-                return $fallback_data;
+                wp_send_json_success($fallback_data);
+                return;
             }
 
-            if (wp_doing_ajax()) {
-                wp_send_json_success($parsed_data);
-            }
-            return $parsed_data;
+            wp_send_json_success($parsed_data);
+            return;
             
         } catch (Exception $e) {
-            return new WP_Error(
-                'parse_error',
-                __('Error parsing search results', 'seed-catalog')
-            );
+            wp_send_json_error(array(
+                'message' => __('Error parsing search results', 'seed-catalog'),
+                'error' => $e->getMessage()
+            ));
+            return;
         }
     }
 
