@@ -3,7 +3,7 @@
  * Plugin Name: Seed Catalog
  * Plugin URI: https://github.com/abrianbaker80/seed-catalog
  * Description: A comprehensive seed catalog management system with AI-powered plant information retrieval.
- * Version: 1.0.0
+ * Version: 1.0.1
  * Author: Allen Baker
  * Author URI: https://yourwebsite.com
  * License: GPL-2.0+
@@ -25,7 +25,7 @@ if (!defined('WPINC')) {
  * Current plugin version.
  * Start at version 1.0.0 and use SemVer - https://semver.org
  */
-define('SEED_CATALOG_VERSION', '1.0.0');
+define('SEED_CATALOG_VERSION', '1.0.1');
 
 /**
  * Define plugin constants.
@@ -71,6 +71,16 @@ register_deactivation_hook(__FILE__, 'seed_catalog_deactivate');
 require_once SEED_CATALOG_PLUGIN_DIR . 'includes/class-seed-catalog.php';
 
 /**
+ * Load the settings class for managing API keys and OAuth credentials
+ */
+require_once SEED_CATALOG_PLUGIN_DIR . 'includes/class-seed-catalog-settings.php';
+
+/**
+ * Load the version manager class
+ */
+require_once SEED_CATALOG_PLUGIN_DIR . 'includes/class-seed-catalog-version-manager.php';
+
+/**
  * Begins execution of the plugin.
  *
  * Since everything within the plugin is registered via hooks,
@@ -82,6 +92,13 @@ require_once SEED_CATALOG_PLUGIN_DIR . 'includes/class-seed-catalog.php';
 function run_seed_catalog() {
     // Handle plugin initialization errors gracefully
     try {
+        // Initialize version manager
+        new SeedCatalog\Seed_Catalog_Version_Manager(__FILE__);
+        
+        // Initialize settings
+        new SeedCatalog\Seed_Catalog_Settings();
+        
+        // Initialize the main plugin
         $plugin = new SeedCatalog\Seed_Catalog();
         $plugin->run();
     } catch (Exception $e) {

@@ -1,6 +1,6 @@
 {
-    "name": "allenbaker/seed-catalog",
-    "description": "A comprehensive seed catalog management system with AI-powered plant information retrieval",
+    "name": "abrianbaker80/seed-catalog",
+    "description": "A WordPress plugin for managing seed catalogs with AI-powered features",
     "type": "wordpress-plugin",
     "license": "GPL-2.0+",
     "require": {
@@ -13,18 +13,16 @@
         "phpoffice/phpspreadsheet": "^1.29"
     },
     "require-dev": {
-        "dealerdirect/phpcodesniffer-composer-installer": "^0.7",
+        "dealerdirect/phpcodesniffer-composer-installer": "^0.7.0",
         "php-stubs/wordpress-stubs": "^6.7",
         "phpunit/phpunit": "^9.0",
         "squizlabs/php_codesniffer": "^3.0",
-        "wp-coding-standards/wpcs": "^2.0"
+        "wp-coding-standards/wpcs": "^2.3"
     },
     "autoload": {
-        "classmap": [
-            "includes/",
-            "admin/",
-            "public/"
-        ]
+        "psr-4": {
+            "SeedCatalog\\": "includes/"
+        }
     },
     "config": {
         "optimize-autoloader": true,
@@ -36,12 +34,13 @@
         "platform-check": true
     },
     "scripts": {
-        "phpcs": "phpcs --standard=WordPress",
-        "phpcbf": "phpcbf --standard=WordPress",
+        "phpcs": "phpcs",
+        "phpcbf": "phpcbf",
         "test": "phpunit",
         "post-install-cmd": [
             "php -r \"if (!extension_loaded('zip')) { echo 'The zip extension is required. Please install or enable it.\\n'; exit(1); }\""
-        ]
+        ],
+        "increment-version": "php scripts/increment-version.php"
     },
     "minimum-stability": "stable",
     "prefer-stable": true,

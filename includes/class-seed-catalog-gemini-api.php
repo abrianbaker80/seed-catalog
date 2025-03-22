@@ -38,7 +38,8 @@ class Seed_Catalog_Gemini_API {
      * Initialize the class and set up WordPress hooks
      */
     public function __construct() {
-        $this->api_key = get_option('seed_catalog_gemini_api_key', '');
+        // Get API key from settings rather than hardcoded value
+        $this->api_key = \SeedCatalog\Seed_Catalog_Settings::get_api_key();
         add_action('init', array($this, 'init'));
         add_action('wp_ajax_process_gemini_search', array($this, 'process_gemini_search'));
         add_action('wp_ajax_nopriv_process_gemini_search', array($this, 'process_gemini_search'));
@@ -1369,6 +1370,15 @@ EOT;
      * @return array The client configuration
      */
     protected function get_client_config() {
+        // Get OAuth credentials from WordPress settings instead of using hardcoded values
+        $oauth_config = \SeedCatalog\Seed_Catalog_Settings::get_oauth_config();
+        
+        // If settings are available, use them; otherwise fall back to the default empty config
+        if (!empty($oauth_config)) {
+            return $oauth_config;
+        }
+        
+        // Return the default config with placeholders (won't work but prevents errors)
         return json_decode(self::DEFAULT_CLIENT_CONFIG, true);
     }
 
