@@ -34,6 +34,14 @@ class Seed_Catalog_Public {
     public function __construct($version = '') {
         $this->version = !empty($version) ? $version : SEED_CATALOG_VERSION;
         
+        // Wait for init hook before registering AJAX handlers that use translations
+        add_action('init', array($this, 'register_ajax_handlers'), 5);
+    }
+    
+    /**
+     * Register AJAX handlers after init hook
+     */
+    public function register_ajax_handlers() {
         // Register AJAX handlers
         add_action('wp_ajax_search_seed_varieties', array($this, 'handle_variety_search'));
         add_action('wp_ajax_nopriv_search_seed_varieties', array($this, 'handle_variety_search'));

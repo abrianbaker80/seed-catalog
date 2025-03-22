@@ -79,6 +79,12 @@ class Seed_Catalog {
      */
     private function load_dependencies() {
         try {
+            // Wait for init hook before loading dependencies that use translations
+            if (!did_action('init')) {
+                add_action('init', array($this, 'load_dependencies'), 5);
+                return;
+            }
+            
             // Essential classes
             require_once SEED_CATALOG_PLUGIN_DIR . 'includes/class-seed-catalog-loader.php';
             require_once SEED_CATALOG_PLUGIN_DIR . 'includes/class-seed-catalog-post-types.php';

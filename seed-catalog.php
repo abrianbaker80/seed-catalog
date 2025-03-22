@@ -40,13 +40,36 @@ define('SEED_CATALOG_PLUGIN_URL', plugins_url('/', __FILE__));
  * This must be done on init hook according to WordPress best practices.
  */
 function seed_catalog_load_textdomain() {
+    // Make sure we don't load translations too early
+    if (!did_action('init')) {
+        return;
+    }
+    
+    // Load the plugin text domain
     load_plugin_textdomain(
         'seed-catalog',
         false,
         dirname(plugin_basename(__FILE__)) . '/languages'
     );
+    
+    // Mark translations as loaded to prevent duplicate loading
+    do_action('seed_catalog_textdomain_loaded');
 }
-add_action('init', 'seed_catalog_load_textdomain');
+
+// Properly hook into WordPress init for translation loading
+add_action('init', 'seed_catalog_load_textdomain', 0);
+
+// Allow late binding of translations for early-loaded strings
+function seed_catalog_get_text($text) {
+    if (!did_action('init')) {
+        // Store strings that need translation for later
+        add_action('init', function() use ($text) {
+            __($text, 'seed-catalog');
+        }, -1);
+        return $text;
+    }
+    return __($text, 'seed-catalog');
+}
 
 /**
  * The code that runs during plugin activation.
