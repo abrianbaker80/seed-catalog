@@ -56,23 +56,8 @@ function seed_catalog_get_text($text) {
 
 // Load required files
 require_once SEED_CATALOG_PLUGIN_DIR . 'includes/class-seed-catalog.php';
-
-/**
- * Initialize and run the plugin
- */
-function run_seed_catalog() {
-    try {
-        $plugin = new SeedCatalog\Seed_Catalog();
-        $plugin->run();
-    } catch (Exception $e) {
-        if (defined('WP_DEBUG') && WP_DEBUG) {
-            error_log('Seed Catalog Plugin Error: ' . $e->getMessage());
-        }
-    }
-}
-
-// Launch the plugin on plugins_loaded to ensure proper initialization order
-add_action('plugins_loaded', 'run_seed_catalog', 10);
+require_once SEED_CATALOG_PLUGIN_DIR . 'includes/class-seed-catalog-settings.php';
+require_once SEED_CATALOG_PLUGIN_DIR . 'includes/class-seed-catalog-version-manager.php';
 
 /**
  * The code that runs during plugin activation.
@@ -97,59 +82,6 @@ function seed_catalog_deactivate() {
 function seed_catalog_uninstall() {
     require_once SEED_CATALOG_PLUGIN_DIR . 'includes/class-seed-catalog-uninstaller.php';
     SeedCatalog\Seed_Catalog_Uninstaller::uninstall();
-}
-
-// Register activation and deactivation hooks
-register_activation_hook(__FILE__, 'seed_catalog_activate');
-register_deactivation_hook(__FILE__, 'seed_catalog_deactivate');
-
-/**
- * Load the settings class for managing API keys and OAuth credentials
- */
-require_once SEED_CATALOG_PLUGIN_DIR . 'includes/class-seed-catalog-settings.php';
-
-/**
- * Load the version manager class
- */
-require_once SEED_CATALOG_PLUGIN_DIR . 'includes/class-seed-catalog-version-manager.php';
-
-/**
- * Begins execution of the plugin.
- *
- * Since everything within the plugin is registered via hooks,
- * then kicking off the plugin from this point in the file does
- * not affect the page life cycle.
- *
- * @since    1.0.0
- */
-function run_seed_catalog() {
-    // Handle plugin initialization errors gracefully
-    try {
-        // Initialize version manager
-        new SeedCatalog\Seed_Catalog_Version_Manager(__FILE__);
-        
-        // Initialize settings
-        new SeedCatalog\Seed_Catalog_Settings();
-        
-        // Initialize the main plugin
-        $plugin = new SeedCatalog\Seed_Catalog();
-        $plugin->run();
-    } catch (Exception $e) {
-        // Log the error
-        if (defined('WP_DEBUG') && WP_DEBUG) {
-            error_log('Seed Catalog Plugin Error: ' . $e->getMessage());
-        }
-        
-        // Display admin notice if in admin area
-        if (is_admin()) {
-            add_action('admin_notices', function() use ($e) {
-                echo '<div class="error"><p>';
-                echo '<strong>Seed Catalog Error:</strong> ';
-                echo esc_html($e->getMessage());
-                echo '</p></div>';
-            });
-        }
-    }
 }
 
 /**
@@ -187,7 +119,41 @@ function seed_catalog_check_version() {
     }
 }
 
-// Launch the plugin
+/**
+ * Initialize and run the plugin
+ */
+function run_seed_catalog() {
+    try {
+        // Initialize version manager
+        new SeedCatalog\Seed_Catalog_Version_Manager(__FILE__);
+        
+        // Initialize settings
+        new SeedCatalog\Seed_Catalog_Settings();
+        
+        // Initialize and run the main plugin
+        $plugin = new SeedCatalog\Seed_Catalog();
+        $plugin->run();
+    } catch (Exception $e) {
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            error_log('Seed Catalog Plugin Error: ' . $e->getMessage());
+        }
+        
+        if (is_admin()) {
+            add_action('admin_notices', function() use ($e) {
+                echo '<div class="error"><p>';
+                echo '<strong>Seed Catalog Error:</strong> ';
+                echo esc_html($e->getMessage());
+                echo '</p></div>';
+            });
+        }
+    }
+}
+
+// Register activation and deactivation hooks
+register_activation_hook(__FILE__, 'seed_catalog_activate');
+register_deactivation_hook(__FILE__, 'seed_catalog_deactivate');
+
+// Launch the plugin with proper initialization order
 add_action('plugins_loaded', 'seed_catalog_check_version', 10);
 add_action('plugins_loaded', 'run_seed_catalog', 11);
 
