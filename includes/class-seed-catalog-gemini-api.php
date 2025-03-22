@@ -932,13 +932,13 @@ EOT;
 
         if (empty($search_term)) {
             wp_send_json_error(array('message' => __('No search term provided.', 'seed-catalog')));
-            return;
+            return new WP_Error('no_term', __('No search term provided.', 'seed-catalog'));
         }
 
         // Check if API is configured
         if (!$this->is_configured()) {
             wp_send_json_error(array('message' => __('Gemini API key not configured.', 'seed-catalog')));
-            return;
+            return new WP_Error('no_api_key', __('Gemini API key not configured.', 'seed-catalog'));
         }
 
         // Format prompt for variety search
@@ -951,7 +951,7 @@ EOT;
         
         if (is_wp_error($api_response)) {
             wp_send_json_error(array('message' => $api_response->get_error_message()));
-            return;
+            return $api_response;
         }
 
         try {
@@ -961,18 +961,23 @@ EOT;
             if (!$parsed_data) {
                 $fallback_data = $this->get_fallback_varieties($search_term);
                 wp_send_json_success($fallback_data);
-                return;
+                return $fallback_data;
             }
 
             wp_send_json_success($parsed_data);
-            return;
+            return $parsed_data;
             
         } catch (Exception $e) {
+            $error = new WP_Error(
+                'parse_error',
+                __('Error parsing search results', 'seed-catalog'),
+                array('error' => $e->getMessage())
+            );
             wp_send_json_error(array(
                 'message' => __('Error parsing search results', 'seed-catalog'),
                 'error' => $e->getMessage()
             ));
-            return;
+            return $error;
         }
     }
 
