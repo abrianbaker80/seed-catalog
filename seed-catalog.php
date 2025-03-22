@@ -21,15 +21,8 @@ if (!defined('WPINC')) {
     die;
 }
 
-/**
- * Current plugin version.
- * Start at version 1.0.0 and use SemVer - https://semver.org
- */
+// Define plugin constants
 define('SEED_CATALOG_VERSION', '1.0.9');
-
-/**
- * Define plugin constants.
- */
 define('SEED_CATALOG_PLUGIN_FILE', __FILE__);
 define('SEED_CATALOG_PLUGIN_BASENAME', plugin_basename(__FILE__));
 define('SEED_CATALOG_PLUGIN_DIR', plugin_dir_path(__FILE__));
@@ -37,32 +30,22 @@ define('SEED_CATALOG_PLUGIN_URL', plugins_url('/', __FILE__));
 
 /**
  * Load plugin textdomain.
- * This must be done on init hook according to WordPress best practices.
+ * This must be done on init hook.
  */
 function seed_catalog_load_textdomain() {
-    // Make sure we don't load translations too early
-    if (!did_action('init')) {
-        return;
-    }
-    
-    // Load the plugin text domain
     load_plugin_textdomain(
         'seed-catalog',
         false,
-        dirname(plugin_basename(__FILE__)) . '/languages'
+        dirname(SEED_CATALOG_PLUGIN_BASENAME) . '/languages'
     );
-    
-    // Mark translations as loaded to prevent duplicate loading
-    do_action('seed_catalog_textdomain_loaded');
 }
-
-// Properly hook into WordPress init for translation loading
 add_action('init', 'seed_catalog_load_textdomain', 0);
 
-// Allow late binding of translations for early-loaded strings
+/**
+ * Helper function for early text that needs translation
+ */
 function seed_catalog_get_text($text) {
     if (!did_action('init')) {
-        // Store strings that need translation for later
         add_action('init', function() use ($text) {
             __($text, 'seed-catalog');
         }, -1);
@@ -70,6 +53,26 @@ function seed_catalog_get_text($text) {
     }
     return __($text, 'seed-catalog');
 }
+
+// Load required files
+require_once SEED_CATALOG_PLUGIN_DIR . 'includes/class-seed-catalog.php';
+
+/**
+ * Initialize and run the plugin
+ */
+function run_seed_catalog() {
+    try {
+        $plugin = new SeedCatalog\Seed_Catalog();
+        $plugin->run();
+    } catch (Exception $e) {
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            error_log('Seed Catalog Plugin Error: ' . $e->getMessage());
+        }
+    }
+}
+
+// Launch the plugin on plugins_loaded to ensure proper initialization order
+add_action('plugins_loaded', 'run_seed_catalog', 10);
 
 /**
  * The code that runs during plugin activation.
@@ -99,12 +102,6 @@ function seed_catalog_uninstall() {
 // Register activation and deactivation hooks
 register_activation_hook(__FILE__, 'seed_catalog_activate');
 register_deactivation_hook(__FILE__, 'seed_catalog_deactivate');
-
-/**
- * The core plugin class that is used to define internationalization,
- * admin-specific hooks, and public-facing site hooks.
- */
-require_once SEED_CATALOG_PLUGIN_DIR . 'includes/class-seed-catalog.php';
 
 /**
  * Load the settings class for managing API keys and OAuth credentials
