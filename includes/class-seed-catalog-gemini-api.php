@@ -59,7 +59,7 @@ class Seed_Catalog_Gemini_API {
     /**
      * The Gemini API endpoint for text generation - updated to Gemini 2.0
      */
-    const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent';
+    const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1/models/gemini-1.0-pro:generateContent';
 
     /**
      * The Gemini API endpoint for image recognition
@@ -123,7 +123,7 @@ class Seed_Catalog_Gemini_API {
             return new WP_Error('no_api_key', __('No Gemini API key set.', 'seed-catalog'));
         }
 
-        $url = 'https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent?key=' . $this->api_key;
+        $url = self::GEMINI_API_URL . '?key=' . urlencode($this->api_key);
         
         $body = json_encode([
             'contents' => [
@@ -152,25 +152,26 @@ class Seed_Catalog_Gemini_API {
         ]);
 
         if (is_wp_error($response)) {
-            return new WP_Error(
-                'request_failed',
-                $response->get_error_message(),
-                ['status' => 500]
-            );
+            $this->log_debug("API request error: " . $response->get_error_message());
+            return $response;
         }
 
         $response_code = wp_remote_retrieve_response_code($response);
         if ($response_code !== 200) {
+            $this->log_debug("API responded with code $response_code");
+            $error_body = wp_remote_retrieve_body($response);
+            $this->log_debug("Error response: $error_body");
             return new WP_Error(
                 'api_error',
                 sprintf(__('API request failed with status code: %d', 'seed-catalog'), $response_code),
-                ['status' => $response_code]
+                ['status' => $response_code, 'response' => $error_body]
             );
         }
 
         $body = json_decode(wp_remote_retrieve_body($response), true);
         
         if (json_last_error() !== JSON_ERROR_NONE) {
+            $this->log_debug("JSON decode error: " . json_last_error_msg());
             return new WP_Error('json_decode_error', __('Error decoding API response', 'seed-catalog'));
         }
 
