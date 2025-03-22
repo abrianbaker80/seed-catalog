@@ -48,26 +48,24 @@ class Seed_Catalog_Admin {
     public function __construct($version = '') {
         $this->version = !empty($version) ? $version : SEED_CATALOG_VERSION;
         
-        // Register AJAX handlers if in admin
-        if (is_admin()) {
-            // Core AJAX handlers
-            add_action('wp_ajax_seed_catalog_save_settings', array($this, 'ajax_save_settings'));
-            add_action('wp_ajax_get_seed_details', array($this, 'ajax_get_seed_details'));
-            add_action('wp_ajax_seed_catalog_gemini_image_recognition', array($this, 'ajax_image_recognition'));
-            
-            // Initialize all admin functionality
-            $this->register_actions();
-            
-            // Add settings page
-            add_action('admin_menu', array($this, 'add_plugin_settings_page'));
-            
-            // Register settings
-            add_action('admin_init', array($this, 'register_settings'));
-            
-            // Handle media upload for seed images
-            add_filter('upload_mimes', array($this, 'allowed_mime_types'));
-            add_filter('wp_check_filetype_and_ext', array($this, 'check_filetype'), 10, 4);
-        }
+        // Wait for init hook to register handlers that use translations
+        add_action('init', array($this, 'register_admin_handlers'), 5);
+    }
+    
+    /**
+     * Register admin handlers after init hook
+     */
+    public function register_admin_handlers() {
+        // Add plugin admin menu
+        add_action('admin_menu', array($this, 'add_plugin_settings_page'));
+        
+        // Register settings
+        add_action('admin_init', array($this, 'register_settings'));
+        
+        // Ajax handlers
+        add_action('wp_ajax_seed_catalog_save_settings', array($this, 'ajax_save_settings'));
+        add_action('wp_ajax_get_seed_details', array($this, 'ajax_get_seed_details'));
+        add_action('wp_ajax_seed_catalog_gemini_image_recognition', array($this, 'ajax_image_recognition'));
     }
 
     /**

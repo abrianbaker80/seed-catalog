@@ -33,7 +33,49 @@ class Seed_Catalog_Uninstaller {
      * @since    1.0.0
      */
     public static function uninstall() {
-        self::maybe_remove_all_data();
+        if (is_multisite()) {
+            // Defer cleanup for each site until init to ensure translations are loaded
+            add_action('init', array(__CLASS__, 'multisite_cleanup'), 5);
+        } else {
+            // Defer cleanup until init to ensure translations are loaded
+            add_action('init', array(__CLASS__, 'cleanup'), 5);
+        }
+    }
+    
+    /**
+     * Clean up plugin data for a single site
+     */
+    public static function cleanup() {
+        // Delete options
+        delete_option('seed_catalog_version');
+        delete_option('seed_catalog_items_per_page');
+        delete_option('seed_catalog_gemini_api_key');
+        delete_option('seed_catalog_enable_debug');
+        delete_option('seed_catalog_first_activation');
+        
+        // Log cleanup success when debug is enabled
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            error_log(sprintf(
+                __('Seed Catalog: Cleanup completed for site %d', 'seed-catalog'),
+                get_current_blog_id()
+            ));
+        }
+    }
+    
+    /**
+     * Handle multisite cleanup
+     */
+    public static function multisite_cleanup() {
+        global $wpdb;
+        
+        // Get all blogs in the network
+        $blog_ids = $wpdb->get_col("SELECT blog_id FROM $wpdb->blogs");
+        
+        foreach ($blog_ids as $blog_id) {
+            switch_to_blog($blog_id);
+            self::cleanup();
+            restore_current_blog();
+        }
     }
     
     /**

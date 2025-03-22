@@ -34,12 +34,28 @@ class Seed_Catalog_Activator {
      * @since    1.0.0
      */
     public static function activate() {
+        // Defer activation message until init
+        \add_action('init', array(__CLASS__, 'add_activation_message'), 5);
+        
         self::initialize_options();
         self::register_post_types();
         self::create_example_content();
         
         // Flush rewrite rules after registering custom post types
         \flush_rewrite_rules();
+    }
+    
+    /**
+     * Add activation message after translations are loaded
+     */
+    public static function add_activation_message() {
+        \add_action('admin_notices', function() {
+            ?>
+            <div class="notice notice-success is-dismissible">
+                <p><?php _e('Seed Catalog has been activated successfully!', 'seed-catalog'); ?></p>
+            </div>
+            <?php
+        });
     }
     
     /**
