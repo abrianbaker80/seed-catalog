@@ -90,7 +90,7 @@ class Seed_Catalog_Diagnostic {
                 );
                 echo '</p></div>';
             }
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             echo '<div class="error"><p>';
             echo esc_html__('Error running diagnostics: ', 'seed-catalog') . esc_html($e->getMessage());
             echo '</p></div>';
@@ -419,7 +419,7 @@ class Seed_Catalog_Diagnostic {
         );
         
         // Check if any categories exist
-        $category_count = wp_count_terms('seed_category');
+        $category_count = wp_count_terms(['taxonomy' => 'seed_category']);
         
         $results['items'][] = array(
             'label' => __('Seed Categories', 'seed-catalog'),
@@ -521,7 +521,7 @@ class Seed_Catalog_Diagnostic {
                             )
                         );
                     }
-                } catch (Exception $e) {
+                } catch (\Exception $e) {
                     $connection_test = array(
                         'label' => __('API Connection', 'seed-catalog'),
                         'value' => __('Error', 'seed-catalog'),

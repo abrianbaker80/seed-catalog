@@ -11,6 +11,44 @@ if (!defined('ABSPATH')) {
     die;
 }
 
+// Include the Gemini API class
+$gemini_api_file = plugin_dir_path(__FILE__) . 'class-seed-catalog-gemini-api.php';
+if (file_exists($gemini_api_file)) {
+    require_once $gemini_api_file;
+} else {
+    // If file doesn't exist, check if it's in a different location
+    $alternative_path = plugin_dir_path(dirname(__FILE__)) . 'includes/class-seed-catalog-gemini-api.php';
+    if (file_exists($alternative_path)) {
+        require_once $alternative_path;
+    } else {
+        // Display admin notice if the file is missing
+        add_action('admin_notices', function() {
+            echo '<div class="error"><p>Seed Catalog Plugin Error: Required file class-seed-catalog-gemini-api.php is missing!</p></div>';
+        });
+    }
+}
+
+// Make sure the class exists before trying to use it
+if (!class_exists('Seed_Catalog_Gemini_API')) {
+    class Seed_Catalog_Gemini_API {
+        public function set_api_key($key) {
+            $this->api_key = $key;
+        }
+        
+        public function test_api($prompt, $api_key) {
+            return ['success' => false, 'message' => 'Full implementation needed - class was auto-created'];
+        }
+        
+        public function parse_json_response($response_text) {
+            return [];
+        }
+        
+        public function test_seed_varieties($search_term) {
+            return ['api_response' => 'Placeholder', 'parsed_result' => []];
+        }
+    }
+}
+
 /**
  * Register shortcode and admin page for API testing
  */
@@ -193,7 +231,9 @@ function seed_catalog_test_parse() {
         // Call the public method that wraps the protected functionality
         $response = $gemini_api->test_seed_varieties($search_term);
         
-        if (is_wp_error($response)) {
+        if (is_array($response) && isset($response['error'])) {
+            wp_send_json_error($response['error']);
+        } elseif (is_object($response) && is_wp_error($response)) {
             wp_send_json_error($response->get_error_message());
         } else {
             wp_send_json_success($response);
