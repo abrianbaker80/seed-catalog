@@ -22,10 +22,12 @@ $newVersionValue = $newVersionValue.Trim()
 Write-Host "New version: $newVersionValue" -ForegroundColor Green
 Write-Host ""
 
-# Ask if user wants to commit, tag and push automatically
-$confirmChanges = Read-Host "Do you want to commit, tag and push these changes? (y/n)"
+# Prompt for confirmation with clear Y/N options
+Write-Host "Do you want to commit, tag and push these changes? (Y/N)" -ForegroundColor Cyan
+$confirmation = Read-Host
 
-if ($confirmChanges -eq "y" -or $confirmChanges -eq "Y") {
+# Convert input to uppercase and check if it's "Y"
+if ($confirmation.ToUpper() -eq "Y") {
     Write-Host "Committing changes..." -ForegroundColor Green
     git add .
     git commit -m "Bump version: $newVersionValue"
@@ -44,7 +46,7 @@ if ($confirmChanges -eq "y" -or $confirmChanges -eq "Y") {
     Write-Host ""
     Write-Host "GitHub Actions will now automatically create a release." -ForegroundColor Yellow
 } else {
-    Write-Host "=== Process Complete ===" -ForegroundColor Cyan
+    Write-Host "=== Process Completed Without Pushing ===" -ForegroundColor Cyan
     Write-Host "Version has been bumped to $newVersionValue but changes have not been committed." -ForegroundColor Yellow
     Write-Host "To commit manually, use these commands:" -ForegroundColor White
     Write-Host "  git add ." -ForegroundColor Yellow
