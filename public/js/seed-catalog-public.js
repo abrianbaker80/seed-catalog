@@ -412,7 +412,59 @@
                 }
 
                 showMessage('Searching for varieties of ' + searchTerm + '...', 'info');
-                searchVarieties(searchTerm);
+                
+                // Call the correct action for Gemini AI search
+                $.ajax({
+                    url: seedCatalogPublic.ajaxUrl,
+                    type: 'POST',
+                    data: {
+                        action: 'process_gemini_search',
+                        nonce: seedCatalogPublic.nonce,
+                        query: searchTerm,
+                        context: 'seed_variety_search'
+                    },
+                    success: function(response) {
+                        debug("AJAX success response:", response);
+                        
+                        if (response.success && response.data) {
+                            // Check if we can extract varieties from the response
+                            try {
+                                let varieties = [];
+                                const data = response.data;
+                                
+                                // Handle different response formats
+                                if (typeof data === 'string') {
+                                    // Try to parse JSON from string response
+                                    const jsonData = JSON.parse(data);
+                                    if (jsonData.varieties) {
+                                        varieties = jsonData.varieties;
+                                    }
+                                } else if (data.varieties) {
+                                    varieties = data.varieties;
+                                }
+                                
+                                if (varieties.length > 0) {
+                                    displayVarieties(varieties, searchTerm);
+                                } else {
+                                    // Fall back to regular variety search if we can't extract varieties
+                                    searchVarieties(searchTerm);
+                                }
+                            } catch (e) {
+                                debug("Error parsing Gemini response:", e);
+                                // Fall back to regular variety search
+                                searchVarieties(searchTerm);
+                            }
+                        } else {
+                            // Fall back to regular variety search if Gemini search fails
+                            searchVarieties(searchTerm);
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        debug("AJAX error for Gemini search:", { status, error, xhr });
+                        // Fall back to regular variety search
+                        searchVarieties(searchTerm);
+                    }
+                });
             });
         }
 

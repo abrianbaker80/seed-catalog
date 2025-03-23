@@ -49,6 +49,41 @@ class Seed_Catalog_Public {
         // Add AJAX handler for seed details
         add_action('wp_ajax_get_seed_details', array($this, 'handle_seed_details'));
         add_action('wp_ajax_nopriv_get_seed_details', array($this, 'handle_seed_details'));
+        
+        // Register AJAX handler for Gemini process search (direct passthrough to Gemini API class)
+        add_action('wp_ajax_process_gemini_search', array($this, 'handle_gemini_search'));
+        add_action('wp_ajax_nopriv_process_gemini_search', array($this, 'handle_gemini_search'));
+    }
+    
+    /**
+     * Handle AJAX requests for Gemini search
+     * This is a wrapper for the Gemini API process_gemini_search method
+     */
+    public function handle_gemini_search() {
+        // Check nonce for security
+        if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'seed_catalog_gemini_nonce')) {
+            wp_send_json_error(array('message' => 'Security check failed.'));
+            return;
+        }
+        
+        // Use the Gemini API class to perform the search
+        if (!class_exists('SeedCatalog\\Seed_Catalog_Gemini_API')) {
+            require_once SEED_CATALOG_PLUGIN_DIR . 'includes/class-seed-catalog-gemini-api.php';
+        }
+        
+        $gemini_api = new Seed_Catalog_Gemini_API();
+        
+        // Make sure the API key is set
+        if (!$gemini_api->is_configured()) {
+            wp_send_json_error(array('message' => 'Gemini API key not configured. Please configure it in the plugin settings.'));
+            return;
+        }
+        
+        // Call the process_gemini_search method
+        $gemini_api->process_gemini_search();
+        
+        // This should not be reached as process_gemini_search should handle the response
+        wp_die();
     }
 
     /**
