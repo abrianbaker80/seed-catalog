@@ -39,6 +39,16 @@ class Seed_Catalog_API_Test_Util {
      * @since    1.0.0
      */
     public function __construct() {
+        // Delay initialization until after init to ensure translations are loaded
+        add_action('init', array($this, 'init_api'), 20);
+    }
+    
+    /**
+     * Initialize the API after WordPress init
+     * 
+     * @since    1.1.0
+     */
+    public function init_api() {
         $this->api = new Seed_Catalog_Gemini_API();
         
         // Register AJAX handlers and admin hooks
@@ -54,6 +64,15 @@ class Seed_Catalog_API_Test_Util {
      * @return    array|\WP_Error            The test result or error. Returns array on success, WP_Error on failure.
      */
     public function test_api_connection($api_key = null) {
+        // Ensure translations are loaded
+        if (!did_action('init')) {
+            $this->log_error('API test called before init hook');
+            return new \WP_Error(
+                'too_early',
+                'API test called too early, before translations are loaded'
+            );
+        }
+        
         if ($api_key === null) {
             $api_key = get_option('seed_catalog_gemini_api_key', '');
         }
@@ -126,6 +145,15 @@ class Seed_Catalog_API_Test_Util {
      */
     public function handle_api_test() {
         try {
+            // Ensure translations are loaded
+            if (!did_action('init')) {
+                wp_send_json_error(array(
+                    'message' => 'API test called too early, before translations are loaded',
+                    'error_type' => 'too_early'
+                ));
+                return;
+            }
+            
             if (!check_ajax_referer('seed_catalog_test_api', 'nonce', false)) {
                 wp_send_json_error(array(
                     'message' => __('Security check failed.', 'seed-catalog'),
@@ -172,6 +200,11 @@ class Seed_Catalog_API_Test_Util {
      * Output the JavaScript for the API test functionality
      */
     public function output_test_js() {
+        // Ensure translations are loaded
+        if (!did_action('init')) {
+            return;
+        }
+        
         $screen = get_current_screen();
         if ($screen && $screen->id !== 'settings_page_seed-catalog') {
             return;
@@ -328,6 +361,17 @@ class Seed_Catalog_API_Test_Util {
             <span id="api-test-result"></span>
         </div>
         <?php
+    }
+    
+    /**
+     * Log an error message 
+     * 
+     * @param string $message Error message to log
+     */
+    private function log_error($message) {
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            error_log('Seed Catalog API Test Error: ' . $message);
+        }
     }
 }
 

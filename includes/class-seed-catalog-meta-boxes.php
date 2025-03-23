@@ -26,6 +26,12 @@ class Seed_Catalog_Meta_Boxes {
      * @since    1.0.0
      */
     public function add_seed_meta_boxes() {
+        // Ensure translations are loaded before adding meta boxes
+        if (!did_action('init')) {
+            add_action('init', array($this, 'add_seed_meta_boxes'), 20);
+            return;
+        }
+        
         add_meta_box(
             'seed_details',
             __('Seed Details', 'seed-catalog'),
