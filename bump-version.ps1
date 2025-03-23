@@ -45,7 +45,8 @@ if ($confirmation.ToUpper() -eq "Y") {
     Write-Host "✓ Tag v$newVersionValue created and pushed" -ForegroundColor Green
     Write-Host ""
     Write-Host "GitHub Actions will now automatically create a release." -ForegroundColor Yellow
-} else {
+} 
+else {
     Write-Host "=== Process Completed Without Pushing ===" -ForegroundColor Cyan
     Write-Host "Version has been bumped to $newVersionValue but changes have not been committed." -ForegroundColor Yellow
     Write-Host "To commit manually, use these commands:" -ForegroundColor White
