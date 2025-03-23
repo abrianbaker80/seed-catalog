@@ -56,6 +56,9 @@ class Seed_Catalog_Admin {
      * Register admin handlers after init hook
      */
     public function register_admin_handlers() {
+        // Register actions for admin area
+        $this->register_actions();
+        
         // Add plugin admin menu
         add_action('admin_menu', array($this, 'add_plugin_settings_page'));
         
