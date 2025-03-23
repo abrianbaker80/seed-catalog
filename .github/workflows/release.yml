@@ -3,7 +3,7 @@ name: Create Release
 on:
   push:
     tags:
-      - 'v*.*.*.*'
+      - 'v*.*.*'
 
 jobs:
   build:
@@ -30,4 +30,8 @@ jobs:
           body: |
             ## Version ${{ steps.get_version.outputs.VERSION }}
             
-            Please refer to the [changelog](https://github.com/abrianbaker80/Clothing_Form/blob/main/CHANGELOG.md) for details.
+            ### Changes in this release:
+            - Add release notes here
+            
+            ### Installation
+            Download the zip file and install it via the WordPress plugin uploader or extract to your plugins directory.
