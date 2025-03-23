@@ -218,7 +218,7 @@ class Seed_Catalog_Loader {
                     $hook['priority'],
                     $hook['accepted_args']
                 );
-            } catch (Exception $e) {
+            } catch (\Exception $e) {
                 $this->log_error(
                     sprintf(
                         'Error registering filter %s->%s on hook %s: %s',
@@ -241,7 +241,7 @@ class Seed_Catalog_Loader {
                     $hook['priority'],
                     $hook['accepted_args']
                 );
-            } catch (Exception $e) {
+            } catch (\Exception $e) {
                 $this->log_error(
                     sprintf(
                         'Error registering action %s->%s on hook %s: %s',
@@ -262,7 +262,7 @@ class Seed_Catalog_Loader {
                     $shortcode['tag'],
                     array($shortcode['component'], $shortcode['callback'])
                 );
-            } catch (Exception $e) {
+            } catch (\Exception $e) {
                 $this->log_error(
                     sprintf(
                         'Error registering shortcode %s->%s with tag [%s]: %s',
