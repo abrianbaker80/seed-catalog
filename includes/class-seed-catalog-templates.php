@@ -31,10 +31,16 @@ class Seed_Catalog_Templates {
         global $post;
 
         if ($post->post_type === 'seed') {
-            $custom_template = SEED_CATALOG_PLUGIN_DIR . 'templates/single-seed.php';
+            $theme_template = locate_template('single-seed.php');
             
-            if (file_exists($custom_template)) {
-                return $custom_template;
+            if ($theme_template) {
+                return $theme_template;
+            }
+
+            // If no theme template, use plugin template
+            $plugin_template = SEED_CATALOG_PLUGIN_DIR . 'templates/single-seed.php';
+            if (file_exists($plugin_template)) {
+                return $plugin_template;
             }
         }
 
@@ -50,10 +56,16 @@ class Seed_Catalog_Templates {
      */
     public function seed_archive_template($archive_template) {
         if (is_post_type_archive('seed') || is_tax('seed_category')) {
-            $custom_template = SEED_CATALOG_PLUGIN_DIR . 'templates/archive-seed.php';
+            $theme_template = locate_template('archive-seed.php');
             
-            if (file_exists($custom_template)) {
-                return $custom_template;
+            if ($theme_template) {
+                return $theme_template;
+            }
+
+            // If no theme template, use plugin template
+            $plugin_template = SEED_CATALOG_PLUGIN_DIR . 'templates/archive-seed.php';
+            if (file_exists($plugin_template)) {
+                return $plugin_template;
             }
         }
 
@@ -69,8 +81,17 @@ class Seed_Catalog_Templates {
      */
     public function seed_taxonomy_template($template) {
         if (is_tax('seed_category')) {
-            $custom_template = SEED_CATALOG_PLUGIN_DIR . 'templates/taxonomy-seed_category.php';
-            return file_exists($custom_template) ? $custom_template : $template;
+            $theme_template = locate_template('taxonomy-seed_category.php');
+            
+            if ($theme_template) {
+                return $theme_template;
+            }
+
+            // If no theme template, use plugin template
+            $plugin_template = SEED_CATALOG_PLUGIN_DIR . 'templates/taxonomy-seed_category.php';
+            if (file_exists($plugin_template)) {
+                return $plugin_template;
+            }
         }
         return $template;
     }
@@ -85,13 +106,7 @@ class Seed_Catalog_Templates {
     public static function display_seed_details($post_id = null) {
         // Ensure translations are loaded
         if (!did_action('init')) {
-            if (defined('WP_DEBUG') && WP_DEBUG) {
-                error_log('Seed Catalog: display_seed_details called too early, before init hook');
-            }
-            // Schedule to run after init
-            add_action('init', function() use ($post_id) {
-                self::display_seed_details($post_id);
-            }, 20);
+            _doing_it_wrong(__FUNCTION__, sprintf(__('%s should not be called before the init hook.', 'seed-catalog'), __FUNCTION__), '1.0.0');
             return;
         }
 
