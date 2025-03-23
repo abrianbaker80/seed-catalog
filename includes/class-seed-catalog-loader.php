@@ -300,6 +300,7 @@ class Seed_Catalog_Loader {
         $this->errors[] = $message;
         
         if (defined('WP_DEBUG') && WP_DEBUG) {
+            // Avoid using translated text at this point to prevent early translation loading
             error_log('Seed Catalog Loader Error: ' . $message);
         }
     }
