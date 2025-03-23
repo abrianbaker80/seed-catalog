@@ -18,12 +18,39 @@ Write-Host ""
 # Get the new version after increment
 $newVersionHeader = Get-Content -Path "seed-catalog.php" | Select-String -Pattern "\* Version:" | Select-Object -First 1
 $newVersionValue = $newVersionHeader -replace '.*Version:\s*', ''
-Write-Host "New version: $newVersionHeader" -ForegroundColor Green
+$newVersionValue = $newVersionValue.Trim()
+Write-Host "New version: $newVersionValue" -ForegroundColor Green
 Write-Host ""
 
-Write-Host "=== Process Complete ===" -ForegroundColor Cyan
-Write-Host "Ready to commit! Use these commands:" -ForegroundColor White
-Write-Host "  git add ." -ForegroundColor Yellow
-Write-Host "  git commit -m ""Bump version: $newVersionValue""" -ForegroundColor Yellow  
-Write-Host "  git push origin master" -ForegroundColor Yellow
-Write-Host ""
+# Ask if user wants to commit, tag and push automatically
+$confirmChanges = Read-Host "Do you want to commit, tag and push these changes? (y/n)"
+
+if ($confirmChanges -eq "y" -or $confirmChanges -eq "Y") {
+    Write-Host "Committing changes..." -ForegroundColor Green
+    git add .
+    git commit -m "Bump version: $newVersionValue"
+    
+    Write-Host "Creating tag v$newVersionValue..." -ForegroundColor Green
+    git tag "v$newVersionValue"
+    
+    Write-Host "Pushing changes and tags to remote repository..." -ForegroundColor Green
+    git push origin master
+    git push origin "v$newVersionValue"
+    
+    Write-Host "=== Process Complete ===" -ForegroundColor Cyan
+    Write-Host "✓ Version bumped to $newVersionValue" -ForegroundColor Green
+    Write-Host "✓ Changes committed and pushed" -ForegroundColor Green
+    Write-Host "✓ Tag v$newVersionValue created and pushed" -ForegroundColor Green
+    Write-Host ""
+    Write-Host "GitHub Actions will now automatically create a release." -ForegroundColor Yellow
+} else {
+    Write-Host "=== Process Complete ===" -ForegroundColor Cyan
+    Write-Host "Version has been bumped to $newVersionValue but changes have not been committed." -ForegroundColor Yellow
+    Write-Host "To commit manually, use these commands:" -ForegroundColor White
+    Write-Host "  git add ." -ForegroundColor Yellow
+    Write-Host "  git commit -m ""Bump version: $newVersionValue""" -ForegroundColor Yellow  
+    Write-Host "  git tag ""v$newVersionValue""" -ForegroundColor Yellow
+    Write-Host "  git push origin master" -ForegroundColor Yellow
+    Write-Host "  git push origin ""v$newVersionValue""" -ForegroundColor Yellow
+    Write-Host ""
+}
