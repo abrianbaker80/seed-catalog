@@ -83,6 +83,18 @@ class Seed_Catalog_Templates {
      * @return   void
      */
     public static function display_seed_details($post_id = null) {
+        // Ensure translations are loaded
+        if (!did_action('init')) {
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+                error_log('Seed Catalog: display_seed_details called too early, before init hook');
+            }
+            // Schedule to run after init
+            add_action('init', function() use ($post_id) {
+                self::display_seed_details($post_id);
+            }, 20);
+            return;
+        }
+
         if (empty($post_id)) {
             $post_id = get_the_ID();
         }

@@ -26,6 +26,11 @@ class Seed_Catalog_Post_Types {
      * @since    1.0.0
      */
     public function register_seed_post_type() {
+        // Make sure we're running in the init hook before processing translations
+        if (!did_action('init')) {
+            return;
+        }
+
         $labels = array(
             'name'                  => _x('Seeds', 'Post Type General Name', 'seed-catalog'),
             'singular_name'         => _x('Seed', 'Post Type Singular Name', 'seed-catalog'),
@@ -87,6 +92,11 @@ class Seed_Catalog_Post_Types {
      * @since    1.0.0
      */
     public function register_seed_taxonomy() {
+        // Make sure we're running in the init hook before processing translations
+        if (!did_action('init')) {
+            return;
+        }
+
         $labels = array(
             'name'                       => _x('Seed Categories', 'Taxonomy General Name', 'seed-catalog'),
             'singular_name'              => _x('Seed Category', 'Taxonomy Singular Name', 'seed-catalog'),
