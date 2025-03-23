@@ -1428,9 +1428,9 @@
 .seed-catalog-submission-form {
     max-width: 800px;
     margin: 0 auto;
-    padding: 20px;
+    padding: 30px;
     background: #fff;
-    border-radius: 5px;
+    border-radius: 8px;
     box-shadow: 0 2px 10px rgba(0,0,0,0.1);
 }
 
@@ -1468,13 +1468,14 @@
 }
 
 .seed-catalog-form-field {
-    margin-bottom: 15px;
+    margin-bottom: 20px;
 }
 
 .seed-catalog-form-field label {
     display: block;
-    margin-bottom: 5px;
-    font-weight: 500;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: #333;
 }
 
 .seed-catalog-form-field input[type="text"],
@@ -1482,18 +1483,30 @@
 .seed-catalog-form-field select,
 .seed-catalog-form-field textarea {
     width: 100%;
-    padding: 8px 12px;
+    padding: 12px;
     border: 1px solid #ddd;
-    border-radius: 4px;
-    font-size: 14px;
+    border-radius: 6px;
+    font-size: 16px;
+    transition: border-color 0.2s;
+}
+
+.seed-catalog-form-field input:focus,
+.seed-catalog-form-field select:focus,
+.seed-catalog-form-field textarea:focus {
+    border-color: #0073aa;
+    outline: none;
+    box-shadow: 0 0 0 1px #0073aa;
 }
 
 .seed-catalog-form-field textarea {
-    min-height: 100px;
+    min-height: 120px;
+    resize: vertical;
 }
 
-.seed-catalog-form-field select {
-    height: 38px;
+.seed-catalog-form-field .description {
+    margin-top: 6px;
+    font-size: 14px;
+    color: #666;
 }
 
 .seed-catalog-submit-button {
@@ -1953,4 +1966,133 @@ textarea:focus {
     button:focus {
         outline: 2px solid CanvasText;
     }
+}
+
+.seed-catalog-form {
+    max-width: 800px;
+    margin: 2em auto;
+    padding: 20px;
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.seed-catalog-form-field {
+    margin-bottom: 1.5em;
+}
+
+.seed-catalog-form-field label {
+    display: block;
+    margin-bottom: 0.5em;
+    font-weight: 600;
+}
+
+.seed-catalog-form-field input[type="text"],
+.seed-catalog-form-field input[type="number"],
+.seed-catalog-form-field select,
+.seed-catalog-form-field textarea {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+
+.seed-catalog-form-field textarea {
+    min-height: 100px;
+    resize: vertical;
+}
+
+.seed-catalog-input-group {
+    display: flex;
+    gap: 10px;
+    align-items: start;
+}
+
+.seed-catalog-ai-suggest {
+    white-space: nowrap;
+    padding: 8px 15px !important;
+    height: auto !important;
+    display: flex !important;
+    align-items: center;
+    gap: 5px;
+}
+
+.seed-catalog-ai-suggest .dashicons {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+    margin-right: 5px;
+}
+
+.seed-catalog-variety-list {
+    margin-top: 1em;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background: #f9f9f9;
+}
+
+.varieties-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 15px;
+    margin-top: 10px;
+}
+
+.variety-item {
+    padding: 15px;
+    background: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.variety-item:hover {
+    border-color: #2271b1;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.variety-item h4 {
+    margin: 0 0 8px 0;
+    color: #2271b1;
+}
+
+.variety-item p {
+    margin: 0;
+    font-size: 0.9em;
+    color: #666;
+}
+
+.seed-catalog-message {
+    margin: 1em 0;
+    padding: 10px 15px;
+    border-radius: 4px;
+}
+
+.seed-catalog-message.error {
+    background: #f8d7da;
+    border: 1px solid #f5c2c7;
+    color: #842029;
+}
+
+.seed-catalog-message.success {
+    background: #d1e7dd;
+    border: 1px solid #badbcc;
+    color: #0f5132;
+}
+
+.seed-catalog-loading {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px;
+    color: #666;
+}
+
+.seed-catalog-loading .spinner {
+    float: none;
+    margin: 0;
 }

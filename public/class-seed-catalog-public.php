@@ -92,37 +92,23 @@ class Seed_Catalog_Public {
      * @since    1.0.0
      */
     public function enqueue_styles() {
-        // Get asset URLs based on environment
-        $css_urls = array(
-            'seed-catalog-public' => SEED_CATALOG_PLUGIN_URL . 'public/css/seed-catalog-public.css',
-            'seed-catalog-responsive' => SEED_CATALOG_PLUGIN_URL . 'public/css/seed-catalog-responsive.css'
-        );
-        
-        if (defined('SCRIPT_DEBUG') && !SCRIPT_DEBUG) {
-            foreach ($css_urls as $handle => $url) {
-                $css_urls[$handle] = Seed_Catalog_Minify::get_minified_url($url);
-            }
-        }
-        
-        // Enqueue main styles
         wp_enqueue_style(
             'seed-catalog-public',
-            $css_urls['seed-catalog-public'],
+            SEED_CATALOG_PLUGIN_URL . 'public/css/seed-catalog-public.css',
             array(),
-            $this->get_asset_version($css_urls['seed-catalog-public']),
+            $this->version,
             'all'
         );
         
-        // Add enhanced responsive styles
         wp_enqueue_style(
             'seed-catalog-responsive',
-            $css_urls['seed-catalog-responsive'],
+            SEED_CATALOG_PLUGIN_URL . 'public/css/seed-catalog-responsive.css',
             array('seed-catalog-public'),
-            $this->get_asset_version($css_urls['seed-catalog-responsive']),
+            $this->version,
             'all'
         );
         
-        wp_enqueue_style('dashicons');  // Ensure dashicons are available for the AI suggest button
+        wp_enqueue_style('dashicons');
     }
 
     /**

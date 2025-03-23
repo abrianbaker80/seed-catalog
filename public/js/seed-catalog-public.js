@@ -15,6 +15,7 @@
     // When the DOM is fully loaded
     $(function() {
         debug("Seed Catalog JS initialized");
+        initializeAISearch();
 
         const searchForm = $('.seed-catalog-search-form');
         const searchResults = $('.seed-catalog-search-results');
@@ -1226,4 +1227,306 @@
         $('.seed-catalog-modal-backdrop').removeClass('visible');
     }
 
+    function initializeAISearch() {
+        const seedNameInput = $('#seed_name');
+        const varietyList = $('.seed-catalog-variety-list');
+        const detailsSection = $('#seed-details-section');
+        const aiSuggestButton = $('.seed-catalog-ai-suggest');
+
+        // Initialize variety list container if it doesn't exist
+        if (varietyList.length === 0) {
+            seedNameInput.after('<div class="seed-catalog-variety-list"></div>');
+        }
+
+        // Handle AI suggest button click
+        aiSuggestButton.on('click', function(e) {
+            e.preventDefault();
+            const searchTerm = seedNameInput.val().trim();
+            
+            if (searchTerm.length < 2) {
+                showMessage('Please enter at least 2 characters to search.', 'error');
+                return;
+            }
+
+            // Show loading state
+            varietyList.html('<div class="seed-catalog-loading">Searching for varieties...</div>').show();
+
+            // Make AJAX request to Gemini API
+            $.ajax({
+                url: seedCatalogPublic.ajaxUrl,
+                type: 'POST',
+                data: {
+                    action: 'process_gemini_search',
+                    nonce: seedCatalogPublic.nonce,
+                    query: searchTerm,
+                    context: 'seed_variety_search'
+                },
+                success: function(response) {
+                    if (response.success && response.data) {
+                        try {
+                            let varieties = [];
+                            const data = response.data;
+                            
+                            // Parse varieties from response
+                            if (typeof data === 'string') {
+                                const jsonData = JSON.parse(data);
+                                if (jsonData.varieties) {
+                                    varieties = jsonData.varieties;
+                                }
+                            } else if (data.varieties) {
+                                varieties = data.varieties;
+                            }
+
+                            if (varieties.length > 0) {
+                                displayVarieties(varieties, searchTerm);
+                            } else {
+                                showError('No varieties found. Please try a different search term.');
+                            }
+                        } catch (e) {
+                            debug("Error parsing response:", e);
+                            showError('Error processing search results. Please try again.');
+                        }
+                    } else {
+                        showError(response.data?.message || 'No results found. Please try again.');
+                    }
+                },
+                error: function(xhr, status, error) {
+                    debug("AJAX error:", { status, error, xhr });
+                    showError('Error connecting to server. Please check your connection and try again.');
+                }
+            });
+        });
+
+        // Helper function to display varieties
+        function displayVarieties(varieties, plantType) {
+            const list = $('<div class="varieties-grid"></div>');
+            
+            varieties.forEach(function(variety) {
+                const item = $('<div class="variety-item"></div>')
+                    .append($('<h4></h4>').text(variety.name))
+                    .append($('<p></p>').text(variety.description || 'No description available'))
+                    .on('click', function() {
+                        selectVariety(variety.name, plantType);
+                    });
+                list.append(item);
+            });
+
+            varietyList.empty().append(list).show();
+        }
+
+        // Helper function to select a variety
+        function selectVariety(variety, plantType) {
+            $.ajax({
+                url: seedCatalogPublic.ajaxUrl,
+                type: 'POST',
+                data: {
+                    action: 'get_seed_details',
+                    nonce: seedCatalogPublic.nonce,
+                    variety: variety,
+                    plant_type: plantType
+                },
+                success: function(response) {
+                    if (response.success && response.data) {
+                        fillFormWithDetails(response.data);
+                        varietyList.hide();
+                        detailsSection.slideDown();
+                    } else {
+                        showError('Could not get variety details. Please try again.');
+                    }
+                },
+                error: function(xhr, status, error) {
+                    debug("AJAX error:", { status, error, xhr });
+                    showError('Error connecting to server. Please try again.');
+                }
+            });
+        }
+
+        // Show/hide the variety list when clicking outside
+        $(document).on('click', function(e) {
+            if (!$(e.target).closest('.seed-catalog-input-group, .seed-catalog-variety-list').length) {
+                varietyList.hide();
+            }
+        });
+
+        // Helper function to show messages
+        function showMessage(message, type) {
+            let messageDiv = $('.seed-catalog-message');
+            if (messageDiv.length === 0) {
+                messageDiv = $('<div class="seed-catalog-message"></div>');
+                varietyList.before(messageDiv);
+            }
+            
+            messageDiv
+                .removeClass('success error info')
+                .addClass(type)
+                .html(message)
+                .fadeIn();
+
+            setTimeout(function() {
+                messageDiv.fadeOut();
+            }, 5000);
+        }
+
+        // Helper function to show errors
+        function showError(message) {
+            showMessage(message, 'error');
+        }
+    }
+
+    jQuery(document).ready(function($) {
+        // Initialize AI search functionality
+        function initAISearch() {
+            $('.seed-catalog-ai-suggest').on('click', function(e) {
+                e.preventDefault();
+                const $button = $(this);
+                const $form = $button.closest('form');
+                const $input = $button.siblings('input[type="text"]');
+                const $loading = $button.siblings('.seed-catalog-loading');
+                const $varietyList = $button.closest('.seed-catalog-form-field').find('.seed-catalog-variety-list');
+                
+                if (!$input.val()) {
+                    showMessage('Please enter a seed name first.', 'error');
+                    return;
+                }
+
+                $button.prop('disabled', true);
+                $loading.show();
+                $varietyList.hide();
+
+                $.ajax({
+                    url: seedCatalogPublic.ajaxUrl,
+                    type: 'POST',
+                    data: {
+                        action: 'search_seed_varieties',
+                        nonce: seedCatalogPublic.nonce,
+                        term: $input.val()
+                    },
+                    success: function(response) {
+                        if (response.success && response.data) {
+                            displayVarieties(response.data, $varietyList);
+                        } else {
+                            showMessage(response.data.message || 'No varieties found.', 'error');
+                        }
+                    },
+                    error: function() {
+                        showMessage('Error communicating with the server.', 'error');
+                    },
+                    complete: function() {
+                        $button.prop('disabled', false);
+                        $loading.hide();
+                    }
+                });
+            });
+
+            // Handle variety selection
+            $(document).on('click', '.variety-item', function() {
+                const name = $(this).find('h4').text();
+                const description = $(this).find('p').text();
+                
+                $('#seed_name').val(name);
+                if ($('#seed_description').length) {
+                    $('#seed_description').val(description);
+                }
+                
+                $('.seed-catalog-variety-list').hide();
+                
+                // Trigger details lookup
+                getPlantDetails(name);
+            });
+        }
+
+        // Display varieties in the dropdown
+        function displayVarieties(data, $container) {
+            if (!data.varieties || !data.varieties.length) {
+                showMessage('No varieties found.', 'info');
+                return;
+            }
+
+            const $grid = $('<div class="varieties-grid"></div>');
+            data.varieties.forEach(variety => {
+                $grid.append(`
+                    <div class="variety-item">
+                        <h4>${variety.name}</h4>
+                        <p>${variety.description}</p>
+                    </div>
+                `);
+            });
+
+            $container.html($grid).show();
+        }
+
+        // Get detailed plant information
+        function getPlantDetails(name) {
+            const $detailsSection = $('#seed-details-section');
+            const $loading = $('.seed-catalog-loading');
+
+            $loading.show();
+            $detailsSection.hide();
+
+            $.ajax({
+                url: seedCatalogPublic.ajaxUrl,
+                type: 'POST',
+                data: {
+                    action: 'get_seed_details',
+                    nonce: seedCatalogPublic.nonce,
+                    variety: name
+                },
+                success: function(response) {
+                    if (response.success && response.data) {
+                        populateDetails(response.data);
+                        $detailsSection.fadeIn();
+                    } else {
+                        showMessage('Could not retrieve plant details.', 'error');
+                    }
+                },
+                error: function() {
+                    showMessage('Error communicating with the server.', 'error');
+                },
+                complete: function() {
+                    $loading.hide();
+                }
+            });
+        }
+
+        // Populate details into the form
+        function populateDetails(data) {
+            // Map API response to form fields
+            const fieldMappings = {
+                'days_to_maturity': data.days_to_maturity,
+                'planting_depth': data.planting_depth,
+                'planting_spacing': data.planting_spacing,
+                'sunlight_needs': data.sunlight_needs,
+                'watering_requirements': data.watering_requirements,
+                'harvesting_tips': data.harvesting_tips
+            };
+
+            // Update form fields with the received data
+            Object.keys(fieldMappings).forEach(field => {
+                if (fieldMappings[field]) {
+                    $(`#${field}`).val(fieldMappings[field]);
+                }
+            });
+        }
+
+        // Show messages to the user
+        function showMessage(message, type = 'info') {
+            const $msg = $('<div>')
+                .addClass(`seed-catalog-message ${type}`)
+                .text(message);
+
+            // Remove any existing messages
+            $('.seed-catalog-message').remove();
+
+            // Add the new message before the form
+            $('.seed-catalog-form').prepend($msg);
+
+            // Auto-hide after 5 seconds
+            setTimeout(() => {
+                $msg.fadeOut(() => $msg.remove());
+            }, 5000);
+        }
+
+        // Initialize all functionality
+        initAISearch();
+    });
 })(jQuery);

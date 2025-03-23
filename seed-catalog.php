@@ -43,14 +43,23 @@ add_action('init', 'seed_catalog_load_textdomain', 0);
 
 /**
  * Helper function for early text that needs translation
+ * 
+ * Modified to avoid triggering translations too early (before init hook)
  */
 function seed_catalog_get_text($text) {
+    // Check if we're before the init hook
     if (!did_action('init')) {
+        // Just return the untranslated text before init
+        // We'll register a callback to mark it for translation later
         add_action('init', function() use ($text) {
+            // This just marks the string for translation but doesn't actually translate yet
+            // The textdomain is properly loaded at this point
             __($text, 'seed-catalog');
         }, -1);
         return $text;
     }
+    
+    // After init, we can safely translate
     return __($text, 'seed-catalog');
 }
 

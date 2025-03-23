@@ -34,30 +34,43 @@ class Seed_Catalog_Settings {
      * Initialize the class
      */
     public function __construct() {
-        add_action('admin_menu', array($this, 'add_settings_page'));
         add_action('admin_init', array($this, 'register_settings'));
-    }
-
-    /**
-     * Add settings page to admin menu
-     */
-    public function add_settings_page() {
-        add_submenu_page(
-            'edit.php?post_type=seed',
-            __('Seed Catalog Settings', 'seed-catalog'),
-            __('Settings', 'seed-catalog'),
-            'manage_options',
-            'seed-catalog-settings',
-            array($this, 'render_settings_page')
-        );
+        // Settings page is now registered in class-seed-catalog-post-types.php
     }
 
     /**
      * Register plugin settings
      */
     public function register_settings() {
+        // Register settings section
+        add_settings_section(
+            'seed_catalog_api_settings',
+            __('API Settings', 'seed-catalog'),
+            array($this, 'render_api_settings_section'),
+            'seed_catalog_settings'
+        );
+
+        // Register API key field
+        register_setting(
+            'seed_catalog_settings',
+            self::OPTION_API_KEY,
+            array(
+                'type' => 'string',
+                'sanitize_callback' => 'sanitize_text_field',
+                'default' => ''
+            )
+        );
+
+        // Add API key field
+        add_settings_field(
+            self::OPTION_API_KEY,
+            __('Gemini API Key', 'seed-catalog'),
+            array($this, 'render_api_key_field'),
+            'seed_catalog_settings',
+            'seed_catalog_api_settings'
+        );
+
         // Register settings
-        register_setting('seed_catalog_settings', self::OPTION_API_KEY);
         register_setting('seed_catalog_settings', self::OPTION_OAUTH_CLIENT_ID);
         register_setting('seed_catalog_settings', self::OPTION_OAUTH_CLIENT_SECRET);
 
@@ -119,12 +132,11 @@ class Seed_Catalog_Settings {
      * Render settings page
      */
     public function render_settings_page() {
-        // Check user capabilities
         if (!current_user_can('manage_options')) {
             return;
         }
 
-        // Show success message if settings were updated
+        // Show message if settings were updated
         if (isset($_GET['settings-updated'])) {
             add_settings_error(
                 'seed_catalog_messages',
@@ -134,7 +146,6 @@ class Seed_Catalog_Settings {
             );
         }
 
-        // Render settings form
         ?>
         <div class="wrap">
             <h1><?php echo esc_html(get_admin_page_title()); ?></h1>
@@ -154,7 +165,6 @@ class Seed_Catalog_Settings {
                     <li><?php _e('Create a Google Cloud Platform account', 'seed-catalog'); ?></li>
                     <li><?php _e('Enable the Gemini API in Google AI Studio', 'seed-catalog'); ?></li>
                     <li><?php _e('Create an API key for Gemini', 'seed-catalog'); ?></li>
-                    <li><?php _e('Set up OAuth credentials (if using OAuth authentication)', 'seed-catalog'); ?></li>
                 </ol>
                 <p>
                     <a href="https://makersuite.google.com/app" target="_blank" class="button">
@@ -187,14 +197,58 @@ class Seed_Catalog_Settings {
         $api_key = get_option(self::OPTION_API_KEY, '');
         ?>
         <input type="password" 
+               id="<?php echo self::OPTION_API_KEY; ?>"
                name="<?php echo self::OPTION_API_KEY; ?>" 
                value="<?php echo esc_attr($api_key); ?>" 
                class="regular-text"
                autocomplete="off" />
         <p class="description">
-            <?php _e('Your Google Gemini API key is required for AI-powered seed information.', 'seed-catalog'); ?>
+            <?php _e('Enter your Google Gemini API key here. This is required for AI-powered seed information.', 'seed-catalog'); ?>
         </p>
         <?php
+        // Add a test button if we have an API key
+        if (!empty($api_key)) {
+            ?>
+            <button type="button" id="test-gemini-api" class="button">
+                <?php _e('Test API Connection', 'seed-catalog'); ?>
+            </button>
+            <span id="api-test-result" style="display:none; margin-left: 10px;"></span>
+            <script>
+            jQuery(document).ready(function($) {
+                $('#test-gemini-api').on('click', function() {
+                    const $button = $(this);
+                    const $result = $('#api-test-result');
+                    
+                    $button.prop('disabled', true);
+                    $result.html('Testing...').removeClass('notice-error notice-success').show();
+                    
+                    $.ajax({
+                        url: ajaxurl,
+                        type: 'POST',
+                        data: {
+                            action: 'test_gemini_api',
+                            nonce: '<?php echo wp_create_nonce('seed_catalog_test_api'); ?>',
+                            api_key: $('#<?php echo self::OPTION_API_KEY; ?>').val()
+                        },
+                        success: function(response) {
+                            if (response.success) {
+                                $result.html('✓ API connection successful').addClass('notice-success');
+                            } else {
+                                $result.html('✗ ' + response.data.message).addClass('notice-error');
+                            }
+                        },
+                        error: function() {
+                            $result.html('✗ Connection error').addClass('notice-error');
+                        },
+                        complete: function() {
+                            $button.prop('disabled', false);
+                        }
+                    });
+                });
+            });
+            </script>
+            <?php
+        }
     }
 
     /**

@@ -54,22 +54,23 @@ class Seed_Catalog {
     private $dependencies_loaded = false;
 
     /**
-     * Define the core functionality of the plugin.
-     *
-     * Set the plugin version and initialize the loader which will be used to
-     * register all hooks with WordPress.
+     * Initialize the class and set its properties.
      *
      * @since    1.0.0
      */
     public function __construct() {
-        $this->version = SEED_CATALOG_VERSION;
+        $this->load_dependencies();
+        $this->set_locale();
+        $this->define_admin_hooks();
+        $this->define_public_hooks();
         
-        // Initialize loader first
-        require_once SEED_CATALOG_PLUGIN_DIR . 'includes/class-seed-catalog-loader.php';
-        $this->loader = new Seed_Catalog_Loader();
+        // Initialize settings
+        new Seed_Catalog_Settings();
         
-        // Schedule dependency loading for init
-        add_action('init', array($this, 'init_plugin'), 0);
+        // Initialize post types
+        $post_types = new Seed_Catalog_Post_Types();
+        add_action('init', array($post_types, 'register_seed_post_type'));
+        add_action('init', array($post_types, 'register_seed_taxonomy'));
     }
 
     /**
@@ -107,8 +108,11 @@ class Seed_Catalog {
      * @access   private
      */
     private function load_dependencies() {
-        // Essential classes
+        require_once SEED_CATALOG_PLUGIN_DIR . 'includes/class-seed-catalog-settings.php';
         require_once SEED_CATALOG_PLUGIN_DIR . 'includes/class-seed-catalog-post-types.php';
+        require_once SEED_CATALOG_PLUGIN_DIR . 'includes/class-seed-catalog-gemini-api.php';
+        
+        // Essential classes
         require_once SEED_CATALOG_PLUGIN_DIR . 'includes/class-seed-catalog-meta-boxes.php';
         require_once SEED_CATALOG_PLUGIN_DIR . 'includes/class-seed-catalog-shortcodes.php';
         require_once SEED_CATALOG_PLUGIN_DIR . 'includes/class-seed-catalog-templates.php';
@@ -120,13 +124,38 @@ class Seed_Catalog {
         
         // Feature classes
         require_once SEED_CATALOG_PLUGIN_DIR . 'includes/class-seed-catalog-exporter.php';
-        require_once SEED_CATALOG_PLUGIN_DIR . 'includes/class-seed-catalog-gemini-api.php';
         
         // Diagnostic and testing tools
         if (is_admin()) {
             require_once SEED_CATALOG_PLUGIN_DIR . 'includes/class-seed-catalog-diagnostic.php';
             require_once SEED_CATALOG_PLUGIN_DIR . 'includes/class-seed-catalog-api-test-util.php';
         }
+    }
+
+    /**
+     * Set the plugin locale for internationalization.
+     *
+     * @since    1.0.0
+     * @access   private
+     */
+    private function set_locale() {
+        add_action('init', 'seed_catalog_load_textdomain', 0);
+    }
+
+    /**
+     * Define the locale for this plugin for internationalization.
+     *
+     * @since    1.0.0 
+     * @access   private
+     */
+    private function set_locale() {
+        add_action('init', function() {
+            load_plugin_textdomain(
+                'seed-catalog',
+                false,
+                dirname(SEED_CATALOG_PLUGIN_BASENAME) . '/languages'
+            );
+        }, 0);
     }
 
     /**
@@ -195,9 +224,41 @@ class Seed_Catalog {
             // Register export functionality
             $this->loader->add_action('admin_post_seed_catalog_export', $exporter, 'handle_export');
             
+            // Add API test handler
+            add_action('wp_ajax_test_gemini_api', array($this, 'handle_test_api'));
+            
         } catch (Exception $e) {
             $this->log_error('Error initializing admin hooks: ' . $e->getMessage());
             throw $e;
+        }
+    }
+
+    /**
+     * Handle API test requests
+     */
+    public function handle_test_api() {
+        check_ajax_referer('seed_catalog_test_api', 'nonce');
+        
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error(array('message' => 'Permission denied'));
+            return;
+        }
+
+        $api_key = isset($_POST['api_key']) ? sanitize_text_field($_POST['api_key']) : '';
+        if (empty($api_key)) {
+            wp_send_json_error(array('message' => 'No API key provided'));
+            return;
+        }
+
+        // Test the API connection
+        $gemini_api = new Seed_Catalog_Gemini_API();
+        $gemini_api->set_api_key($api_key);
+        $test_result = $gemini_api->test_api_connection($api_key);
+
+        if ($test_result['success']) {
+            wp_send_json_success(array('message' => 'API connection successful'));
+        } else {
+            wp_send_json_error(array('message' => $test_result['message']));
         }
     }
 

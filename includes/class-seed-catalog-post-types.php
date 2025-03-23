@@ -21,69 +21,67 @@ if (!defined('ABSPATH')) {
 class Seed_Catalog_Post_Types {
 
     /**
-     * Register the custom post type 'seed'.
-     *
-     * @since    1.0.0
+     * Register the custom post type for seeds
      */
     public function register_seed_post_type() {
-        // Make sure we're running in the init hook before processing translations
-        if (!did_action('init')) {
-            return;
-        }
-
         $labels = array(
-            'name'                  => _x('Seeds', 'Post Type General Name', 'seed-catalog'),
-            'singular_name'         => _x('Seed', 'Post Type Singular Name', 'seed-catalog'),
-            'menu_name'             => __('Seeds', 'seed-catalog'),
-            'name_admin_bar'        => __('Seed', 'seed-catalog'),
-            'archives'              => __('Seed Archives', 'seed-catalog'),
-            'attributes'            => __('Seed Attributes', 'seed-catalog'),
-            'parent_item_colon'     => __('Parent Seed:', 'seed-catalog'),
-            'all_items'             => __('All Seeds', 'seed-catalog'),
-            'add_new_item'          => __('Add New Seed', 'seed-catalog'),
-            'add_new'               => __('Add New', 'seed-catalog'),
-            'new_item'              => __('New Seed', 'seed-catalog'),
-            'edit_item'             => __('Edit Seed', 'seed-catalog'),
-            'update_item'           => __('Update Seed', 'seed-catalog'),
-            'view_item'             => __('View Seed', 'seed-catalog'),
-            'view_items'            => __('View Seeds', 'seed-catalog'),
-            'search_items'          => __('Search Seed', 'seed-catalog'),
-            'not_found'             => __('Not found', 'seed-catalog'),
-            'not_found_in_trash'    => __('Not found in Trash', 'seed-catalog'),
-            'featured_image'        => __('Plant Image', 'seed-catalog'),
-            'set_featured_image'    => __('Set plant image', 'seed-catalog'),
-            'remove_featured_image' => __('Remove plant image', 'seed-catalog'),
-            'use_featured_image'    => __('Use as plant image', 'seed-catalog'),
-            'insert_into_item'      => __('Insert into seed', 'seed-catalog'),
-            'uploaded_to_this_item' => __('Uploaded to this seed', 'seed-catalog'),
-            'items_list'            => __('Seeds list', 'seed-catalog'),
-            'items_list_navigation' => __('Seeds list navigation', 'seed-catalog'),
-            'filter_items_list'     => __('Filter seeds list', 'seed-catalog'),
+            'name'               => _x('Seeds', 'post type general name', 'seed-catalog'),
+            'singular_name'      => _x('Seed', 'post type singular name', 'seed-catalog'),
+            'menu_name'          => _x('Seeds', 'admin menu', 'seed-catalog'),
+            'name_admin_bar'     => _x('Seed', 'add new on admin bar', 'seed-catalog'),
+            'add_new'            => _x('Add New', 'seed', 'seed-catalog'),
+            'add_new_item'       => __('Add New Seed', 'seed-catalog'),
+            'new_item'           => __('New Seed', 'seed-catalog'),
+            'edit_item'          => __('Edit Seed', 'seed-catalog'),
+            'view_item'          => __('View Seed', 'seed-catalog'),
+            'all_items'          => __('All Seeds', 'seed-catalog'),
+            'search_items'       => __('Search Seeds', 'seed-catalog'),
+            'parent_item_colon'  => __('Parent Seeds:', 'seed-catalog'),
+            'not_found'          => __('No seeds found.', 'seed-catalog'),
+            'not_found_in_trash' => __('No seeds found in Trash.')
         );
 
         $args = array(
-            'label'                 => __('Seed', 'seed-catalog'),
-            'description'           => __('Seed catalog entries', 'seed-catalog'),
-            'labels'                => $labels,
-            'supports'              => array('title', 'editor', 'thumbnail', 'custom-fields'),
-            'hierarchical'          => false,
-            'public'                => true,
-            'show_ui'               => true,
-            'show_in_menu'          => true,
-            'menu_position'         => 5,
-            'menu_icon'             => 'dashicons-seedling',
-            'show_in_admin_bar'     => true,
-            'show_in_nav_menus'     => true,
-            'can_export'            => true,
-            'has_archive'           => true,
-            'exclude_from_search'   => false,
-            'publicly_queryable'    => true,
-            'capability_type'       => 'post',
-            'show_in_rest'          => true,  // Enable Gutenberg editor
-            'rest_base'             => 'seeds',
+            'labels'             => $labels,
+            'description'        => __('Seed catalog entries.', 'seed-catalog'),
+            'public'            => true,
+            'publicly_queryable' => true,
+            'show_ui'           => true,
+            'show_in_menu'      => true,
+            'menu_position'     => 20,
+            'menu_icon'         => 'dashicons-seedling',
+            'query_var'         => true,
+            'rewrite'           => array('slug' => 'seed'),
+            'capability_type'   => 'post',
+            'has_archive'       => true,
+            'hierarchical'      => false,
+            'supports'          => array('title', 'editor', 'author', 'thumbnail', 'excerpt', 'custom-fields', 'revisions'),
+            'show_in_rest'      => true,
+            'rest_base'         => 'seeds',
         );
 
         register_post_type('seed', $args);
+
+        // Register settings page under Seeds menu
+        add_action('admin_menu', array($this, 'register_admin_menu'));
+    }
+
+    /**
+     * Register admin menu items
+     */
+    public function register_admin_menu() {
+        if (!function_exists('get_plugin_data')) {
+            require_once(ABSPATH . 'wp-admin/includes/plugin.php');
+        }
+        
+        add_submenu_page(
+            'edit.php?post_type=seed',
+            __('Seed Catalog Settings', 'seed-catalog'),
+            __('Settings', 'seed-catalog'),
+            'manage_options',
+            'seed-catalog-settings',
+            array('\SeedCatalog\Seed_Catalog_Settings', 'render_settings_page')
+        );
     }
 
     /**
